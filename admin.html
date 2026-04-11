@@ -18,7 +18,223 @@
       color: #2c3e50;
     }
     
-    /* Header */
+    /* ===== PATTERN LOCK CSS ===== */
+    .pattern-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a2a66 0%, #1e3a8a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .pattern-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    
+    .pattern-container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .pattern-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0a2a66;
+      margin-bottom: 10px;
+    }
+    
+    .pattern-subtitle {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+    }
+    
+    .pattern-status {
+      font-size: 14px;
+      font-weight: 600;
+      height: 20px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+    
+    .pattern-status.error {
+      color: #e74c3c;
+    }
+    
+    .pattern-status.success {
+      color: #27ae60;
+    }
+    
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 240px;
+      height: 240px;
+      margin: 0 auto 25px;
+      position: relative;
+    }
+    
+    .pattern-dot {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      border: 3px solid #bdc3c7;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .pattern-dot:hover {
+      background: #d0d0d0;
+      transform: scale(1.05);
+    }
+    
+    .pattern-dot.active {
+      background: #3498db;
+      border-color: #2980b9;
+      transform: scale(1.1);
+    }
+    
+    .pattern-dot.correct {
+      background: #27ae60;
+      border-color: #229954;
+    }
+    
+    .pattern-dot.wrong {
+      background: #e74c3c;
+      border-color: #c0392b;
+      animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    .pattern-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .pattern-line {
+      stroke: #3498db;
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .pattern-line.show {
+      opacity: 1;
+    }
+    
+    .pattern-line.correct {
+      stroke: #27ae60;
+    }
+    
+    .pattern-line.wrong {
+      stroke: #e74c3c;
+    }
+    
+    .pattern-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .pattern-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .pattern-btn-primary {
+      background: #0a2a66;
+      color: white;
+    }
+    
+    .pattern-btn-primary:hover {
+      background: #004080;
+    }
+    
+    .pattern-btn-secondary {
+      background: #f0f0f0;
+      color: #2c3e50;
+    }
+    
+    .pattern-btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .pattern-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .pattern-forgot {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+    
+    .pattern-forgot a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .pattern-forgot a:hover {
+      text-decoration: underline;
+    }
+    
+    .pattern-setup-hint {
+      background: #e8f4f8;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+    
+    .pattern-setup-hint strong {
+      color: #0a2a66;
+    }
+    
+    /* ===== EXISTING ADMIN CSS ===== */
     .navbar {
       background: #0a2a66;
       color: white;
@@ -56,14 +272,17 @@
       font-weight: bold;
     }
     
-    /* Main Container */
     .admin-section {
       max-width: 900px;
       margin: 30px auto;
       padding: 0 20px;
+      display: none;
     }
     
-    /* Error/Status Boxes */
+    .admin-section.visible {
+      display: block;
+    }
+    
     #errorBox {
       display: none;
       background: #e74c3c;
@@ -84,7 +303,6 @@
       font-weight: 500;
     }
     
-    /* Cards */
     .card {
       background: white;
       border-radius: 12px;
@@ -103,7 +321,6 @@
       gap: 10px;
     }
     
-    /* Tracking Number Display */
     .tracking-display {
       background: linear-gradient(135deg, #0a2a66, #004080);
       color: white;
@@ -128,7 +345,6 @@
       font-family: 'Courier New', monospace;
     }
     
-    /* Video Section - CENTERED & PROMINENT */
     .video-section {
       text-align: center;
       margin-bottom: 25px;
@@ -178,7 +394,6 @@
       margin-bottom: 10px;
     }
     
-    /* Video Controls */
     .video-controls {
       display: flex;
       gap: 10px;
@@ -230,7 +445,6 @@
       word-break: break-all;
     }
     
-    /* Progress Bar */
     .progress-bar {
       width: 100%;
       max-width: 600px;
@@ -253,7 +467,6 @@
       transition: width 0.3s ease;
     }
     
-    /* Form Grid */
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -299,7 +512,6 @@
       font-family: 'Courier New', monospace;
     }
     
-    /* Action Buttons */
     .action-bar {
       display: flex;
       gap: 15px;
@@ -344,7 +556,6 @@
       color: white;
     }
     
-    /* Table Section */
     .table-card {
       overflow-x: auto;
     }
@@ -417,7 +628,6 @@
       text-decoration: underline;
     }
     
-    /* Responsive */
     @media (max-width: 768px) {
       .navbar {
         padding: 15px 20px;
@@ -448,7 +658,6 @@
       }
     }
     
-    /* Loading State */
     .loading-row {
       text-align: center;
       padding: 40px;
@@ -458,6 +667,54 @@
 </head>
 <body>
 
+<!-- Pattern Lock Overlay -->
+<div class="pattern-overlay" id="patternOverlay">
+  <div class="pattern-container">
+    <div class="pattern-title">🔒 Admin Access</div>
+    <div class="pattern-subtitle" id="patternSubtitle">Enter your pattern to continue</div>
+    
+    <div class="pattern-setup-hint" id="setupHint" style="display: none;">
+      <strong>Create your pattern:</strong><br>
+      Connect at least 3 dots to create your pattern lock.<br>
+      Remember: <strong>2 → 4 → 1</strong> (example: top-middle, middle-left, top-left)
+    </div>
+    
+    <div class="pattern-status" id="patternStatus"></div>
+    
+    <div class="pattern-grid" id="patternGrid">
+      <svg class="pattern-canvas" id="patternCanvas">
+        <line class="pattern-line" id="line1" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line2" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line3" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line4" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line5" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line6" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line7" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line8" x1="0" y1="0" x2="0" y2="0"/>
+      </svg>
+      
+      <div class="pattern-dot" data-index="1"></div>
+      <div class="pattern-dot" data-index="2"></div>
+      <div class="pattern-dot" data-index="3"></div>
+      <div class="pattern-dot" data-index="4"></div>
+      <div class="pattern-dot" data-index="5"></div>
+      <div class="pattern-dot" data-index="6"></div>
+      <div class="pattern-dot" data-index="7"></div>
+      <div class="pattern-dot" data-index="8"></div>
+      <div class="pattern-dot" data-index="9"></div>
+    </div>
+    
+    <div class="pattern-actions">
+      <button class="pattern-btn pattern-btn-secondary" onclick="clearPattern()">Clear</button>
+      <button class="pattern-btn pattern-btn-primary" id="confirmBtn" onclick="confirmPattern()" disabled>Unlock</button>
+    </div>
+    
+    <div class="pattern-forgot">
+      <a href="#" onclick="forgotPattern(event)">Forgot pattern? Reset here</a>
+    </div>
+  </div>
+</div>
+
 <header class="navbar">
   <div class="logo">worldclassshipping Admin</div>
   <nav>
@@ -466,29 +723,24 @@
   </nav>
 </header>
 
-<section class="admin-section">
+<section class="admin-section" id="adminSection">
   
-  <!-- Error Display -->
   <div id="errorBox"></div>
   <div id="statusBox"></div>
 
-  <!-- Create/Edit Form -->
   <div class="card">
     <div class="card-title">
       <span>📦</span>
       <span>Create / Edit Shipment</span>
     </div>
     
-    <!-- Tracking Number Display -->
     <div class="tracking-display">
       <div class="tracking-label">Tracking Number</div>
       <div class="tracking-number" id="trackingDisplay">Generating...</div>
     </div>
     
-    <!-- Hidden Input for Form Submission -->
     <input type="hidden" id="tracking">
     
-    <!-- Video Upload Section - CENTERED & MAIN FOCUS -->
     <div class="video-section">
       <div class="video-title">
         <span>📹</span>
@@ -525,7 +777,6 @@
       </div>
     </div>
     
-    <!-- Shipment Details Form -->
     <div class="form-grid">
       <div class="form-group">
         <label>Sender Name</label>
@@ -575,7 +826,6 @@
       </div>
     </div>
     
-    <!-- Action Buttons -->
     <div class="action-bar">
       <button class="btn-primary" onclick="saveShipment()">
         💾 Save Shipment
@@ -586,7 +836,6 @@
     </div>
   </div>
 
-  <!-- Shipments Table -->
   <div class="card table-card">
     <div class="card-title">
       <span>📋</span>
@@ -616,9 +865,282 @@
   </div>
 </section>
 
-<!-- Firebase and Admin Scripts -->
 <script type="module" src="firebase.js"></script>
 <script type="module" src="adminscript.js"></script>
+
+<!-- Pattern Lock JavaScript -->
+<script type="module">
+  import { db } from './firebase.js';
+  import { doc, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+  
+  // ===== PATTERN LOCK CONFIGURATION =====
+  // Default pattern: 2 → 4 → 1 (can be changed by user)
+  const DEFAULT_PATTERN = [2, 4, 1];
+  let currentPattern = [];
+  let isDrawing = false;
+  let isSetupMode = false;
+  let savedPattern = null;
+  let tempPattern = null;
+  
+  // Initialize
+  document.addEventListener('DOMContentLoaded', async () => {
+    await initPatternLock();
+  });
+  
+  async function initPatternLock() {
+    try {
+      const patternDoc = await getDoc(doc(db, 'admin', 'patternLock'));
+      
+      if (!patternDoc.exists()) {
+        // First time - use default pattern
+        isSetupMode = true;
+        savedPattern = DEFAULT_PATTERN;
+        await setDoc(doc(db, 'admin', 'patternLock'), {
+          pattern: DEFAULT_PATTERN,
+          createdAt: new Date().toISOString(),
+          isDefault: true
+        });
+        showSetupUI();
+      } else {
+        savedPattern = patternDoc.data().pattern;
+        isSetupMode = false;
+        showUnlockUI();
+      }
+      
+      setupPatternEvents();
+    } catch (err) {
+      console.error('Pattern init error:', err);
+      showStatus('Error loading pattern lock', 'error');
+    }
+  }
+  
+  function showSetupUI() {
+    document.getElementById('patternSubtitle').textContent = 'Create your pattern (Default: 2→4→1)';
+    document.getElementById('setupHint').style.display = 'block';
+    document.getElementById('confirmBtn').textContent = 'Save Pattern';
+    document.querySelector('.pattern-forgot').style.display = 'none';
+  }
+  
+  function showUnlockUI() {
+    document.getElementById('patternSubtitle').textContent = 'Enter your pattern to continue';
+    document.getElementById('setupHint').style.display = 'none';
+    document.getElementById('confirmBtn').textContent = 'Unlock';
+    document.querySelector('.pattern-forgot').style.display = 'block';
+  }
+  
+  function setupPatternEvents() {
+    const dots = document.querySelectorAll('.pattern-dot');
+    
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+      
+      dot.addEventListener('mousedown', (e) => startDraw(e, index));
+      dot.addEventListener('touchstart', (e) => startDraw(e, index), {passive: false});
+      
+      dot.addEventListener('mouseenter', () => enterDot(index));
+      dot.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (element && element.classList.contains('pattern-dot')) {
+          const idx = parseInt(element.dataset.index);
+          enterDot(idx);
+        }
+      }, {passive: false});
+    });
+    
+    document.addEventListener('mouseup', endDraw);
+    document.addEventListener('touchend', endDraw);
+  }
+  
+  function startDraw(e, dotIndex) {
+    e.preventDefault();
+    isDrawing = true;
+    currentPattern = [dotIndex];
+    updateDots();
+    drawLines();
+    showStatus('Continue drawing...', 'normal');
+  }
+  
+  function enterDot(dotIndex) {
+    if (!isDrawing) return;
+    
+    if (!currentPattern.includes(dotIndex)) {
+      currentPattern.push(dotIndex);
+      updateDots();
+      drawLines();
+    }
+  }
+  
+  function endDraw() {
+    if (!isDrawing) return;
+    isDrawing = false;
+    
+    const confirmBtn = document.getElementById('confirmBtn');
+    if (currentPattern.length >= 3) {
+      confirmBtn.disabled = false;
+      showStatus('Pattern complete! Click ' + (isSetupMode ? 'Save' : 'Unlock'), 'success');
+    } else {
+      confirmBtn.disabled = true;
+      showStatus('Connect at least 3 dots', 'error');
+      setTimeout(clearPattern, 1000);
+    }
+  }
+  
+  function updateDots() {
+    const dots = document.querySelectorAll('.pattern-dot');
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+      dot.classList.remove('active', 'correct', 'wrong');
+      if (currentPattern.includes(index)) {
+        dot.classList.add('active');
+      }
+    });
+  }
+  
+  function drawLines() {
+    const lines = document.querySelectorAll('.pattern-line');
+    const grid = document.getElementById('patternGrid');
+    const gridRect = grid.getBoundingClientRect();
+    
+    for (let i = 0; i < currentPattern.length - 1; i++) {
+      const fromDot = document.querySelector(`[data-index="${currentPattern[i]}"]`);
+      const toDot = document.querySelector(`[data-index="${currentPattern[i + 1]}"]`);
+      const line = lines[i];
+      
+      if (fromDot && toDot && line) {
+        const fromRect = fromDot.getBoundingClientRect();
+        const toRect = toDot.getBoundingClientRect();
+        
+        const x1 = fromRect.left - gridRect.left + fromRect.width / 2;
+        const y1 = fromRect.top - gridRect.top + fromRect.height / 2;
+        const x2 = toRect.left - gridRect.left + toRect.width / 2;
+        const y2 = toRect.top - gridRect.top + toRect.height / 2;
+        
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.classList.add('show');
+      }
+    }
+    
+    // Hide unused lines
+    for (let i = currentPattern.length - 1; i < 8; i++) {
+      if (lines[i]) lines[i].classList.remove('show');
+    }
+  }
+  
+  window.clearPattern = function() {
+    currentPattern = [];
+    isDrawing = false;
+    updateDots();
+    document.querySelectorAll('.pattern-line').forEach(l => l.classList.remove('show'));
+    document.getElementById('confirmBtn').disabled = true;
+    showStatus('', 'normal');
+  };
+  
+  window.confirmPattern = async function() {
+    if (currentPattern.length < 3) return;
+    
+    if (isSetupMode) {
+      await saveNewPattern(currentPattern);
+    } else {
+      await verifyPattern(currentPattern);
+    }
+  };
+  
+  async function saveNewPattern(pattern) {
+    try {
+      await setDoc(doc(db, 'admin', 'patternLock'), {
+        pattern: pattern,
+        updatedAt: new Date().toISOString(),
+        isDefault: false
+      });
+      
+      savedPattern = pattern;
+      showStatus('Pattern saved successfully!', 'success');
+      
+      setTimeout(() => {
+        unlockAdmin();
+      }, 1000);
+      
+    } catch (err) {
+      showStatus('Error saving pattern: ' + err.message, 'error');
+    }
+  }
+  
+  async function verifyPattern(pattern) {
+    const isMatch = JSON.stringify(pattern) === JSON.stringify(savedPattern);
+    
+    if (isMatch) {
+      showStatus('Pattern correct! Unlocking...', 'success');
+      document.querySelectorAll('.pattern-dot').forEach(d => {
+        d.classList.remove('active');
+        d.classList.add('correct');
+      });
+      document.querySelectorAll('.pattern-line').forEach(l => l.classList.add('correct'));
+      
+      setTimeout(() => {
+        unlockAdmin();
+      }, 800);
+    } else {
+      showStatus('Wrong pattern! Try again.', 'error');
+      document.querySelectorAll('.pattern-dot').forEach(d => {
+        d.classList.remove('active');
+        d.classList.add('wrong');
+      });
+      document.querySelectorAll('.pattern-line').forEach(l => l.classList.add('wrong'));
+      
+      setTimeout(() => {
+        clearPattern();
+        document.querySelectorAll('.pattern-dot').forEach(d => d.classList.remove('wrong'));
+        document.querySelectorAll('.pattern-line').forEach(l => l.classList.remove('wrong'));
+      }, 1500);
+    }
+  }
+  
+  window.forgotPattern = async function(e) {
+    e.preventDefault();
+    
+    if (!confirm('Reset to default pattern (2→4→1)? This will erase your custom pattern.')) {
+      return;
+    }
+    
+    try {
+      await setDoc(doc(db, 'admin', 'patternLock'), {
+        pattern: DEFAULT_PATTERN,
+        resetAt: new Date().toISOString(),
+        isDefault: true
+      });
+      
+      savedPattern = DEFAULT_PATTERN;
+      isSetupMode = true;
+      showStatus('Pattern reset to default (2→4→1)', 'success');
+      showSetupUI();
+      clearPattern();
+      
+    } catch (err) {
+      showStatus('Error resetting: ' + err.message, 'error');
+    }
+  };
+  
+  function unlockAdmin() {
+    document.getElementById('patternOverlay').classList.add('hidden');
+    document.getElementById('adminSection').classList.add('visible');
+  }
+  
+  function showStatus(msg, type) {
+    const status = document.getElementById('patternStatus');
+    status.textContent = msg;
+    status.className = 'pattern-status ' + type;
+  }
+  
+  // Make functions globally available for onclick handlers
+  window.clearPattern = window.clearPattern;
+  window.confirmPattern = window.confirmPattern;
+  window.forgotPattern = window.forgotPattern;
+</script>
 
 </body>
 </html>
