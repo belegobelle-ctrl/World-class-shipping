@@ -1,0 +1,273 @@
+// firebase.js - CDN version for static hosting with error handling
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  onSnapshot, 
+  addDoc, 
+  serverTimestamp, 
+  increment, 
+  writeBatch,
+  enableIndexedDbPersistence,
+  CACHE_SIZE_UNLIMITED
+} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js';
+
+// Your Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDrP5Mad3wEmrIsGC9r1mBsO-dZXTMC1aA",
+  authDomain: "woldclass-869f4.firebaseapp.com",
+  projectId: "woldclass-869f4",
+  storageBucket: "woldclass-869f4.firebasestorage.app",
+  messagingSenderId: "572555503191",
+  appId: "1:572555503191:web:881686b92964465108a512",
+  measurementId: "G-90QZWH599P"
+};
+
+// Initialize
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Try to enable persistence (optional, for offline support)
+try {
+  enableIndexedDbPersistence(db, {
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED
+  }).catch((err) => {
+    if (err.code == 'failed-precondition') {
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (err.code == 'unimplemented') {
+      console.warn('Browser doesn\'t support persistence');
+    }
+  });
+} catch (e) {
+  console.log('Persistence not enabled:', e.message);
+}
+
+const analytics = getAnalytics(app);
+
+// Generate tracking number
+function generateTrackingNumber() {
+  return "EC-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
+// Shipment Services
+export const shipmentService = {
+  async getAll() {
+    const q = query(collection(db, 'shipments'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  },
+
+  async getByTrackingNumber(trackingNumber) {
+    const q = query(
+      collection(db, 'shipments'), 
+      where('trackingNumber', '==', trackingNumber.toUpperCase())
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return null;
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() };
+  },
+
+  async create(shipment) {
+    const trackingNumber = shipment.trackingNumber || generateTrackingNumber();
+    const shipmentData = {
+      ...shipment,
+      trackingNumber: trackingNumber.toUpperCase(),
+      createdAt: serverTimestamp()
+    };
+    await setDoc(doc(db, 'shipments', trackingNumber.toUpperCase()), shipmentData);
+    return shipmentData;
+  },
+
+  async update(trackingNumber, data) {
+    const ref = doc(db, 'shipments', trackingNumber.toUpperCase());
+    await updateDoc(ref, {
+      ...data,
+      updatedAt: serverTimestamp()
+    });
+    return this.getByTrackingNumber(trackingNumber);
+  },
+
+  async delete(trackingNumber) {
+    await deleteDoc(doc(db, 'shipments', trackingNumber.toUpperCase()));
+  },
+
+  subscribeToShipments(callback, onError) {
+    const q = query(collection(db, 'shipments'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, 
+      (snapshot) => {
+        const shipments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(shipments);
+      },
+      (error) => {
+        console.error('Shipments subscription error:', error);
+        if (onError) onError(error);
+      }
+    );
+  }
+};
+
+// Chat Services
+export const chatService = {
+  async getOrCreateConversation(trackingNumber) {
+    const tn = trackingNumber.toUpperCase();
+    const q = query(
+      collection(db, 'conversations'), 
+      where('trackingNumber', '==', tn),
+      where('status', '==', 'active')
+    );
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    }
+    
+    const convoRef = doc(collection(db, 'conversations'));
+    const conversation = {
+      trackingNumber: tn,
+      status: 'active',
+      unreadCount: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    await setDoc(convoRef, conversation);
+    return { id: convoRef.id, ...conversation };
+  },
+
+  async getConversations() {
+    const q = query(
+      collection(db, 'conversations'),
+      where('status', '==', 'active'),
+      orderBy('updatedAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  },
+
+  subscribeToConversations(callback, onError) {
+    const q = query(
+      collection(db, 'conversations'),
+      where('status', '==', 'active'),
+      orderBy('updatedAt', 'desc')
+    );
+    return onSnapshot(q, 
+      (snapshot) => {
+        const conversations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(conversations);
+      },
+      (error) => {
+        console.error('Conversations subscription error:', error);
+        if (onError) onError(error);
+      }
+    );
+  },
+
+  async getMessages(conversationId) {
+    const q = query(
+      collection(db, 'conversations', conversationId, 'messages'),
+      orderBy('createdAt', 'asc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  },
+
+  subscribeToMessages(conversationId, callback, onError) {
+    const q = query(
+      collection(db, 'conversations', conversationId, 'messages'),
+      orderBy('createdAt', 'asc')
+    );
+    return onSnapshot(q, 
+      (snapshot) => {
+        const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(messages);
+      },
+      (error) => {
+        console.error('Messages subscription error:', error);
+        if (onError) onError(error);
+      }
+    );
+  },
+
+  async sendMessage(conversationId, content, sender) {
+    const batch = writeBatch(db);
+    
+    const messageRef = doc(collection(db, 'conversations', conversationId, 'messages'));
+    const message = {
+      conversationId,
+      content,
+      sender,
+      read: false,
+      createdAt: serverTimestamp()
+    };
+    batch.set(messageRef, message);
+    
+    const convoRef = doc(db, 'conversations', conversationId);
+    const updateData = {
+      lastMessage: {
+        content,
+        sender,
+        createdAt: serverTimestamp()
+      },
+      updatedAt: serverTimestamp()
+    };
+    
+    if (sender === 'user') {
+      updateData.unreadCount = increment(1);
+    }
+    
+    batch.update(convoRef, updateData);
+    await batch.commit();
+    
+    return message;
+  },
+
+  async markAsRead(conversationId) {
+    const batch = writeBatch(db);
+    
+    const convoRef = doc(db, 'conversations', conversationId);
+    batch.update(convoRef, { unreadCount: 0 });
+    
+    const messagesQuery = query(
+      collection(db, 'conversations', conversationId, 'messages'),
+      where('sender', '==', 'admin'),
+      where('read', '==', false)
+    );
+    const snapshot = await getDocs(messagesQuery);
+    snapshot.docs.forEach(doc => {
+      batch.update(doc.ref, { read: true });
+    });
+    
+    await batch.commit();
+  },
+
+  async closeConversation(conversationId) {
+    const ref = doc(db, 'conversations', conversationId);
+    await updateDoc(ref, { status: 'closed', updatedAt: serverTimestamp() });
+  },
+
+  async deleteConversation(conversationId) {
+    const messagesSnapshot = await getDocs(
+      collection(db, 'conversations', conversationId, 'messages')
+    );
+    const batch = writeBatch(db);
+    messagesSnapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+    
+    await deleteDoc(doc(db, 'conversations', conversationId));
+  }
+};
+
+export { db, analytics };
