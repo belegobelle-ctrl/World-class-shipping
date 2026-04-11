@@ -7,10 +7,12 @@ import { db } from './firebase.js';
 // CLOUDINARY CONFIG - VERIFY THESE!
 // ==========================================
 // ==========================================
+// ==========================================
 // CLOUDINARY CONFIG - VERIFY THESE!
 // ==========================================
 const CLOUDINARY_CLOUD_NAME = 'dfncwkf37';  // Your cloud name
-const CLOUDINARY_UPLOAD_PRESET = 'woldclass_videos';  // Must exist and be UNSIGNED
+const CLOUDINARY_UPLOAD_PRESET = 'woldclass_uploads';  // Must exist and be UNSIGNED
+
 
 
 // Debug: Log config on load
