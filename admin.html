@@ -225,7 +225,7 @@
       text-decoration: underline;
     }
     
-    /* Change Password Modal */
+    /* ===== CHANGE PASSWORD MODAL ===== */
     .change-password-modal {
       display: none;
       position: fixed;
@@ -233,10 +233,11 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.9);
       z-index: 10001;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
     }
     
     .change-password-modal.show {
@@ -247,7 +248,7 @@
       background: white;
       padding: 30px;
       border-radius: 16px;
-      max-width: 350px;
+      max-width: 400px;
       width: 90%;
       text-align: center;
     }
@@ -255,14 +256,7 @@
     .change-password-box h3 {
       color: #0a2a66;
       margin-bottom: 20px;
-    }
-    
-    .password-step {
-      display: none;
-    }
-    
-    .password-step.active {
-      display: block;
+      font-size: 20px;
     }
     
     .step-indicator {
@@ -285,6 +279,78 @@
     
     .step-dot.completed {
       background: #27ae60;
+    }
+    
+    .password-step {
+      display: none;
+    }
+    
+    .password-step.active {
+      display: block;
+    }
+    
+    .step-instruction {
+      margin-bottom: 15px;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .step-instruction strong {
+      color: #0a2a66;
+    }
+    
+    .step-status {
+      font-size: 14px;
+      font-weight: 600;
+      height: 20px;
+      margin-bottom: 15px;
+    }
+    
+    .step-status.error {
+      color: #e74c3c;
+    }
+    
+    .step-status.success {
+      color: #27ae60;
+    }
+    
+    /* Pattern grid inside modal */
+    .modal-pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    
+    .modal-pattern-grid .pattern-dot {
+      width: 50px;
+      height: 50px;
+    }
+    
+    .modal-pattern-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .modal-pattern-line {
+      stroke: #3498db;
+      stroke-width: 3;
+      stroke-linecap: round;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .modal-pattern-line.show {
+      opacity: 1;
     }
     
     /* ===== EXISTING ADMIN CSS ===== */
@@ -724,7 +790,7 @@
 <div class="pattern-overlay" id="patternOverlay">
   <div class="pattern-container">
     <div class="pattern-title">🔒 Admin Access</div>
-    <div class="pattern-subtitle" id="patternSubtitle">Draw pattern to unlock</div>
+    <div class="pattern-subtitle">Draw pattern to unlock</div>
     
     <div class="pattern-status" id="patternStatus"></div>
     
@@ -775,26 +841,104 @@
     
     <!-- Step 1: Enter Old Pattern -->
     <div class="password-step active" id="passwordStep1">
-      <p style="margin-bottom: 15px; color: #666;">Enter your <strong>current</strong> pattern</p>
-      <div class="pattern-status" id="step1Status" style="height: 20px; margin-bottom: 10px;"></div>
-      <button class="pattern-btn pattern-btn-primary" onclick="verifyOldPattern()">Continue</button>
-      <button class="pattern-btn pattern-btn-secondary" onclick="closeChangePassword()" style="margin-left: 10px;">Cancel</button>
+      <div class="step-instruction">Enter your <strong>current</strong> pattern</div>
+      <div class="step-status" id="step1Status"></div>
+      
+      <!-- Pattern Grid for Step 1 -->
+      <div class="modal-pattern-grid" id="modalGrid1">
+        <svg class="modal-pattern-canvas" id="modalCanvas1">
+          <line class="modal-pattern-line" id="m1line1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line2" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line3" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line4" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line5" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line6" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line7" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line8" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="pattern-dot" data-step="1" data-index="1"></div>
+        <div class="pattern-dot" data-step="1" data-index="2"></div>
+        <div class="pattern-dot" data-step="1" data-index="3"></div>
+        <div class="pattern-dot" data-step="1" data-index="4"></div>
+        <div class="pattern-dot" data-step="1" data-index="5"></div>
+        <div class="pattern-dot" data-step="1" data-index="6"></div>
+        <div class="pattern-dot" data-step="1" data-index="7"></div>
+        <div class="pattern-dot" data-step="1" data-index="8"></div>
+        <div class="pattern-dot" data-step="1" data-index="9"></div>
+      </div>
+      
+      <div class="pattern-actions">
+        <button class="pattern-btn pattern-btn-primary" onclick="verifyOldPattern()" id="verifyOldBtn" disabled>Continue</button>
+        <button class="pattern-btn pattern-btn-secondary" onclick="closeChangePassword()">Cancel</button>
+      </div>
     </div>
     
     <!-- Step 2: Enter New Pattern -->
     <div class="password-step" id="passwordStep2">
-      <p style="margin-bottom: 15px; color: #666;">Draw your <strong>new</strong> pattern</p>
-      <div class="pattern-status" id="step2Status" style="height: 20px; margin-bottom: 10px;"></div>
-      <button class="pattern-btn pattern-btn-primary" onclick="saveNewPatternStep()" disabled id="step2Btn">Continue</button>
-      <button class="pattern-btn pattern-btn-secondary" onclick="backToStep1()">Back</button>
+      <div class="step-instruction">Draw your <strong>new</strong> pattern</div>
+      <div class="step-status" id="step2Status"></div>
+      
+      <!-- Pattern Grid for Step 2 -->
+      <div class="modal-pattern-grid" id="modalGrid2">
+        <svg class="modal-pattern-canvas" id="modalCanvas2">
+          <line class="modal-pattern-line" id="m2line1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line2" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line3" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line4" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line5" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line6" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line7" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line8" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="pattern-dot" data-step="2" data-index="1"></div>
+        <div class="pattern-dot" data-step="2" data-index="2"></div>
+        <div class="pattern-dot" data-step="2" data-index="3"></div>
+        <div class="pattern-dot" data-step="2" data-index="4"></div>
+        <div class="pattern-dot" data-step="2" data-index="5"></div>
+        <div class="pattern-dot" data-step="2" data-index="6"></div>
+        <div class="pattern-dot" data-step="2" data-index="7"></div>
+        <div class="pattern-dot" data-step="2" data-index="8"></div>
+        <div class="pattern-dot" data-step="2" data-index="9"></div>
+      </div>
+      
+      <div class="pattern-actions">
+        <button class="pattern-btn pattern-btn-primary" onclick="saveNewPatternStep()" id="saveNewBtn" disabled>Continue</button>
+        <button class="pattern-btn pattern-btn-secondary" onclick="backToStep1()">Back</button>
+      </div>
     </div>
     
     <!-- Step 3: Confirm New Pattern -->
     <div class="password-step" id="passwordStep3">
-      <p style="margin-bottom: 15px; color: #666;">Draw your <strong>new</strong> pattern again to confirm</p>
-      <div class="pattern-status" id="step3Status" style="height: 20px; margin-bottom: 10px;"></div>
-      <button class="pattern-btn pattern-btn-primary" onclick="confirmNewPattern()" disabled id="step3Btn">Save Pattern</button>
-      <button class="pattern-btn pattern-btn-secondary" onclick="backToStep2()">Back</button>
+      <div class="step-instruction">Draw your <strong>new</strong> pattern again to confirm</div>
+      <div class="step-status" id="step3Status"></div>
+      
+      <!-- Pattern Grid for Step 3 -->
+      <div class="modal-pattern-grid" id="modalGrid3">
+        <svg class="modal-pattern-canvas" id="modalCanvas3">
+          <line class="modal-pattern-line" id="m3line1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line2" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line3" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line4" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line5" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line6" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line7" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line8" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="pattern-dot" data-step="3" data-index="1"></div>
+        <div class="pattern-dot" data-step="3" data-index="2"></div>
+        <div class="pattern-dot" data-step="3" data-index="3"></div>
+        <div class="pattern-dot" data-step="3" data-index="4"></div>
+        <div class="pattern-dot" data-step="3" data-index="5"></div>
+        <div class="pattern-dot" data-step="3" data-index="6"></div>
+        <div class="pattern-dot" data-step="3" data-index="7"></div>
+        <div class="pattern-dot" data-step="3" data-index="8"></div>
+        <div class="pattern-dot" data-step="3" data-index="9"></div>
+      </div>
+      
+      <div class="pattern-actions">
+        <button class="pattern-btn pattern-btn-primary" onclick="confirmNewPattern()" id="confirmNewBtn" disabled>Save Pattern</button>
+        <button class="pattern-btn pattern-btn-secondary" onclick="backToStep2()">Back</button>
+      </div>
     </div>
   </div>
 </div>
@@ -957,13 +1101,19 @@
   import { db } from './firebase.js';
   import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
   
-  // ===== PATTERN LOCK CONFIGURATION =====
-  const DEFAULT_PATTERN = [2, 4, 1]; // Default: 2→4→1
-  let currentPattern = [];
-  let isDrawing = false;
+  // ===== CONFIGURATION =====
+  const DEFAULT_PATTERN = [2, 4, 1];
   let savedPattern = null;
+  
+  // Main lock state
+  let mainPattern = [];
+  let mainIsDrawing = false;
+  
+  // Modal state
+  let modalPattern = [];
+  let modalIsDrawing = false;
+  let currentStep = 1;
   let tempNewPattern = null;
-  let changePasswordMode = false;
   
   // Initialize
   document.addEventListener('DOMContentLoaded', async () => {
@@ -975,7 +1125,6 @@
       const patternDoc = await getDoc(doc(db, 'admin', 'patternLock'));
       
       if (!patternDoc.exists()) {
-        // First time - save default pattern
         savedPattern = DEFAULT_PATTERN;
         await setDoc(doc(db, 'admin', 'patternLock'), {
           pattern: DEFAULT_PATTERN,
@@ -985,168 +1134,154 @@
         savedPattern = patternDoc.data().pattern;
       }
       
-      setupPatternEvents();
+      setupMainPatternEvents();
     } catch (err) {
       console.error('Pattern init error:', err);
-      showStatus('Error loading pattern', 'error');
+      showMainStatus('Error loading pattern', 'error');
     }
   }
   
-  function setupPatternEvents() {
-    const dots = document.querySelectorAll('.pattern-dot');
+  // ===== MAIN PATTERN LOCK =====
+  function setupMainPatternEvents() {
+    const dots = document.querySelectorAll('#patternGrid .pattern-dot');
     
     dots.forEach((dot) => {
       const index = parseInt(dot.dataset.index);
       
-      dot.addEventListener('mousedown', (e) => startDraw(e, index));
-      dot.addEventListener('touchstart', (e) => startDraw(e, index), {passive: false});
-      
-      dot.addEventListener('mouseenter', () => enterDot(index));
-      dot.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (element && element.classList.contains('pattern-dot')) {
-          const idx = parseInt(element.dataset.index);
-          enterDot(idx);
-        }
-      }, {passive: false});
+      dot.addEventListener('mousedown', (e) => startMainDraw(e, index));
+      dot.addEventListener('touchstart', (e) => startMainDraw(e, index), {passive: false});
+      dot.addEventListener('mouseenter', () => enterMainDot(index));
+      dot.addEventListener('touchmove', handleMainTouchMove, {passive: false});
     });
     
-    document.addEventListener('mouseup', endDraw);
-    document.addEventListener('touchend', endDraw);
+    document.addEventListener('mouseup', endMainDraw);
+    document.addEventListener('touchend', endMainDraw);
   }
   
-  function startDraw(e, dotIndex) {
+  function startMainDraw(e, dotIndex) {
     e.preventDefault();
-    isDrawing = true;
-    currentPattern = [dotIndex];
-    updateDots();
-    drawLines();
-    
-    if (!changePasswordMode) {
-      showStatus('', 'normal');
+    mainIsDrawing = true;
+    mainPattern = [dotIndex];
+    updateMainDots();
+    drawMainLines();
+    showMainStatus('', 'normal');
+  }
+  
+  function enterMainDot(dotIndex) {
+    if (!mainIsDrawing) return;
+    if (!mainPattern.includes(dotIndex)) {
+      mainPattern.push(dotIndex);
+      updateMainDots();
+      drawMainLines();
     }
   }
   
-  function enterDot(dotIndex) {
-    if (!isDrawing) return;
-    
-    if (!currentPattern.includes(dotIndex)) {
-      currentPattern.push(dotIndex);
-      updateDots();
-      drawLines();
+  function handleMainTouchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.classList.contains('pattern-dot') && !element.dataset.step) {
+      const idx = parseInt(element.dataset.index);
+      enterMainDot(idx);
     }
   }
   
-  function endDraw() {
-    if (!isDrawing) return;
-    isDrawing = false;
+  function endMainDraw() {
+    if (!mainIsDrawing) return;
+    mainIsDrawing = false;
     
-    const confirmBtn = document.getElementById('confirmBtn');
-    
-    if (currentPattern.length >= 3) {
-      confirmBtn.disabled = false;
-      
-      if (!changePasswordMode) {
-        // Auto-verify for main unlock
-        verifyAndUnlock();
-      }
+    if (mainPattern.length >= 3) {
+      document.getElementById('confirmBtn').disabled = false;
+      verifyAndUnlock();
     } else {
-      confirmBtn.disabled = true;
-      if (!changePasswordMode) {
-        showStatus('FAILED', 'failed');
-        setTimeout(clearPattern, 1000);
-      }
+      document.getElementById('confirmBtn').disabled = true;
+      showMainStatus('FAILED', 'failed');
+      setTimeout(clearMainPattern, 1000);
     }
   }
   
-  function updateDots() {
-    const dots = document.querySelectorAll('.pattern-dot');
+  function updateMainDots() {
+    const dots = document.querySelectorAll('#patternGrid .pattern-dot');
     dots.forEach((dot) => {
       const index = parseInt(dot.dataset.index);
       dot.classList.remove('active', 'correct', 'wrong');
-      if (currentPattern.includes(index)) {
+      if (mainPattern.includes(index)) {
         dot.classList.add('active');
       }
     });
   }
   
-  function drawLines() {
-    const lines = document.querySelectorAll('.pattern-line');
+  function drawMainLines() {
+    const lines = document.querySelectorAll('#patternCanvas .pattern-line');
     const grid = document.getElementById('patternGrid');
     const gridRect = grid.getBoundingClientRect();
     
-    for (let i = 0; i < currentPattern.length - 1; i++) {
-      const fromDot = document.querySelector(`[data-index="${currentPattern[i]}"]`);
-      const toDot = document.querySelector(`[data-index="${currentPattern[i + 1]}"]`);
+    for (let i = 0; i < mainPattern.length - 1; i++) {
+      const fromDot = document.querySelector(`#patternGrid [data-index="${mainPattern[i]}"]`);
+      const toDot = document.querySelector(`#patternGrid [data-index="${mainPattern[i + 1]}"]`);
       const line = lines[i];
       
       if (fromDot && toDot && line) {
         const fromRect = fromDot.getBoundingClientRect();
         const toRect = toDot.getBoundingClientRect();
         
-        const x1 = fromRect.left - gridRect.left + fromRect.width / 2;
-        const y1 = fromRect.top - gridRect.top + fromRect.height / 2;
-        const x2 = toRect.left - gridRect.left + toRect.width / 2;
-        const y2 = toRect.top - gridRect.top + toRect.height / 2;
-        
-        line.setAttribute('x1', x1);
-        line.setAttribute('y1', y1);
-        line.setAttribute('x2', x2);
-        line.setAttribute('y2', y2);
+        line.setAttribute('x1', fromRect.left - gridRect.left + fromRect.width / 2);
+        line.setAttribute('y1', fromRect.top - gridRect.top + fromRect.height / 2);
+        line.setAttribute('x2', toRect.left - gridRect.left + toRect.width / 2);
+        line.setAttribute('y2', toRect.top - gridRect.top + toRect.height / 2);
         line.classList.add('show');
       }
     }
     
-    for (let i = currentPattern.length - 1; i < 8; i++) {
+    for (let i = mainPattern.length - 1; i < 8; i++) {
       if (lines[i]) lines[i].classList.remove('show');
     }
   }
   
   window.clearPattern = function() {
-    currentPattern = [];
-    isDrawing = false;
-    updateDots();
-    document.querySelectorAll('.pattern-line').forEach(l => l.classList.remove('show'));
+    mainPattern = [];
+    mainIsDrawing = false;
+    updateMainDots();
+    document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.remove('show'));
     document.getElementById('confirmBtn').disabled = true;
-    showStatus('', 'normal');
+    showMainStatus('', 'normal');
   };
   
+  function clearMainPattern() {
+    window.clearPattern();
+  }
+  
   async function verifyAndUnlock() {
-    const isMatch = JSON.stringify(currentPattern) === JSON.stringify(savedPattern);
+    const isMatch = JSON.stringify(mainPattern) === JSON.stringify(savedPattern);
     
     if (isMatch) {
-      // CORRECT PATTERN
-      showStatus('SUCCESS', 'success');
-      document.querySelectorAll('.pattern-dot').forEach(d => {
+      showMainStatus('SUCCESS', 'success');
+      document.querySelectorAll('#patternGrid .pattern-dot').forEach(d => {
         d.classList.remove('active');
         d.classList.add('correct');
       });
-      document.querySelectorAll('.pattern-line').forEach(l => l.classList.add('correct'));
+      document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.add('correct'));
       
       setTimeout(() => {
         unlockAdmin();
       }, 800);
     } else {
-      // WRONG PATTERN - SHOW FAILED
-      showStatus('FAILED', 'failed');
-      document.querySelectorAll('.pattern-dot').forEach(d => {
+      showMainStatus('FAILED', 'failed');
+      document.querySelectorAll('#patternGrid .pattern-dot').forEach(d => {
         d.classList.remove('active');
         d.classList.add('wrong');
       });
-      document.querySelectorAll('.pattern-line').forEach(l => l.classList.add('wrong'));
+      document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.add('wrong'));
       
       setTimeout(() => {
-        clearPattern();
-        document.querySelectorAll('.pattern-dot').forEach(d => d.classList.remove('wrong'));
-        document.querySelectorAll('.pattern-line').forEach(l => l.classList.remove('wrong'));
+        clearMainPattern();
+        document.querySelectorAll('#patternGrid .pattern-dot').forEach(d => d.classList.remove('wrong'));
+        document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.remove('wrong'));
       }, 1500);
     }
   }
   
   window.confirmPattern = async function() {
-    if (changePasswordMode) return;
     await verifyAndUnlock();
   };
   
@@ -1155,190 +1290,287 @@
     document.getElementById('adminSection').classList.add('visible');
   }
   
-  function showStatus(msg, type) {
+  function showMainStatus(msg, type) {
     const status = document.getElementById('patternStatus');
     status.textContent = msg;
     status.className = 'pattern-status ' + type;
   }
   
-  // ===== CHANGE PASSWORD FUNCTIONS =====
-  
+  // ===== MODAL PATTERN LOCK (Change Password) =====
   window.showChangePassword = function(e) {
     e.preventDefault();
-    changePasswordMode = true;
     document.getElementById('changePasswordModal').classList.add('show');
-    clearPattern();
-    resetChangePasswordSteps();
+    resetChangePassword();
   };
   
   window.closeChangePassword = function() {
-    changePasswordMode = false;
     document.getElementById('changePasswordModal').classList.remove('show');
-    clearPattern();
   };
   
-  function resetChangePasswordSteps() {
-    // Reset to step 1
+  function resetChangePassword() {
+    currentStep = 1;
+    modalPattern = [];
+    modalIsDrawing = false;
+    tempNewPattern = null;
+    
+    // Reset steps UI
     document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
     document.getElementById('passwordStep1').classList.add('active');
     
-    document.querySelectorAll('.step-dot').forEach(d => {
-      d.classList.remove('active', 'completed');
-    });
+    document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active', 'completed'));
     document.getElementById('step1').classList.add('active');
     
+    // Clear statuses
     document.getElementById('step1Status').textContent = '';
     document.getElementById('step2Status').textContent = '';
     document.getElementById('step3Status').textContent = '';
     
-    tempNewPattern = null;
+    // Clear all modal grids
+    clearModalGrid(1);
+    clearModalGrid(2);
+    clearModalGrid(3);
+    
+    // Setup events for all modal grids
+    setupModalPatternEvents(1);
+    setupModalPatternEvents(2);
+    setupModalPatternEvents(3);
   }
   
-  window.verifyOldPattern = async function() {
-    if (currentPattern.length < 3) {
-      document.getElementById('step1Status').textContent = 'Draw a pattern first';
-      document.getElementById('step1Status').className = 'pattern-status error';
-      return;
+  function setupModalPatternEvents(step) {
+    const grid = document.getElementById(`modalGrid${step}`);
+    const dots = grid.querySelectorAll('.pattern-dot');
+    
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+      
+      dot.addEventListener('mousedown', (e) => startModalDraw(e, index, step));
+      dot.addEventListener('touchstart', (e) => startModalDraw(e, index, step), {passive: false});
+      dot.addEventListener('mouseenter', () => enterModalDot(index, step));
+      dot.addEventListener('touchmove', (e) => handleModalTouchMove(e, step), {passive: false});
+    });
+  }
+  
+  function startModalDraw(e, dotIndex, step) {
+    if (step !== currentStep) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    modalIsDrawing = true;
+    modalPattern = [dotIndex];
+    updateModalDots(step);
+    drawModalLines(step);
+    
+    const statusEl = document.getElementById(`step${step}Status`);
+    if (statusEl) statusEl.textContent = '';
+  }
+  
+  function enterModalDot(dotIndex, step) {
+    if (!modalIsDrawing || step !== currentStep) return;
+    if (!modalPattern.includes(dotIndex)) {
+      modalPattern.push(dotIndex);
+      updateModalDots(step);
+      drawModalLines(step);
+    }
+  }
+  
+  function handleModalTouchMove(e, step) {
+    if (step !== currentStep) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.classList.contains('pattern-dot') && element.dataset.step == step) {
+      const idx = parseInt(element.dataset.index);
+      enterModalDot(idx, step);
+    }
+  }
+  
+  function endModalDraw(step) {
+    if (!modalIsDrawing || step !== currentStep) return;
+    modalIsDrawing = false;
+    
+    const btn = document.getElementById(step === 1 ? 'verifyOldBtn' : step === 2 ? 'saveNewBtn' : 'confirmNewBtn');
+    
+    if (modalPattern.length >= 3) {
+      if (btn) btn.disabled = false;
+    } else {
+      if (btn) btn.disabled = true;
+      const statusEl = document.getElementById(`step${step}Status`);
+      if (statusEl) {
+        statusEl.textContent = 'FAILED - Need at least 3 dots';
+        statusEl.className = 'step-status error';
+      }
+      setTimeout(() => clearModalGrid(step), 1000);
+    }
+  }
+  
+  // Add global mouse/touch end listeners for modal
+  document.addEventListener('mouseup', (e) => {
+    if (currentStep >= 1 && currentStep <= 3) {
+      endModalDraw(currentStep);
+    }
+  });
+  document.addEventListener('touchend', (e) => {
+    if (currentStep >= 1 && currentStep <= 3) {
+      endModalDraw(currentStep);
+    }
+  });
+  
+  function updateModalDots(step) {
+    const grid = document.getElementById(`modalGrid${step}`);
+    const dots = grid.querySelectorAll('.pattern-dot');
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+      dot.classList.remove('active', 'correct', 'wrong');
+      if (modalPattern.includes(index)) {
+        dot.classList.add('active');
+      }
+    });
+  }
+  
+  function drawModalLines(step) {
+    const lines = document.querySelectorAll(`#modalCanvas${step} .modal-pattern-line`);
+    const grid = document.getElementById(`modalGrid${step}`);
+    const gridRect = grid.getBoundingClientRect();
+    
+    for (let i = 0; i < modalPattern.length - 1; i++) {
+      const fromDot = grid.querySelector(`[data-index="${modalPattern[i]}"]`);
+      const toDot = grid.querySelector(`[data-index="${modalPattern[i + 1]}"]`);
+      const line = lines[i];
+      
+      if (fromDot && toDot && line) {
+        const fromRect = fromDot.getBoundingClientRect();
+        const toRect = toDot.getBoundingClientRect();
+        
+        line.setAttribute('x1', fromRect.left - gridRect.left + fromRect.width / 2);
+        line.setAttribute('y1', fromRect.top - gridRect.top + fromRect.height / 2);
+        line.setAttribute('x2', toRect.left - gridRect.left + toRect.width / 2);
+        line.setAttribute('y2', toRect.top - gridRect.top + toRect.height / 2);
+        line.classList.add('show');
+      }
     }
     
-    const isMatch = JSON.stringify(currentPattern) === JSON.stringify(savedPattern);
+    for (let i = modalPattern.length - 1; i < 8; i++) {
+      if (lines[i]) lines[i].classList.remove('show');
+    }
+  }
+  
+  function clearModalGrid(step) {
+    modalPattern = [];
+    modalIsDrawing = false;
+    
+    const grid = document.getElementById(`modalGrid${step}`);
+    const dots = grid.querySelectorAll('.pattern-dot');
+    dots.forEach(d => d.classList.remove('active', 'correct', 'wrong'));
+    
+    const lines = document.querySelectorAll(`#modalCanvas${step} .modal-pattern-line`);
+    lines.forEach(l => l.classList.remove('show'));
+    
+    const btn = document.getElementById(step === 1 ? 'verifyOldBtn' : step === 2 ? 'saveNewBtn' : 'confirmNewBtn');
+    if (btn) btn.disabled = true;
+  }
+  
+  // ===== CHANGE PASSWORD STEP FUNCTIONS =====
+  window.verifyOldPattern = async function() {
+    if (modalPattern.length < 3) return;
+    
+    const isMatch = JSON.stringify(modalPattern) === JSON.stringify(savedPattern);
+    const statusEl = document.getElementById('step1Status');
     
     if (isMatch) {
-      // Old pattern correct - go to step 2
-      document.getElementById('step1Status').textContent = 'Correct!';
-      document.getElementById('step1Status').className = 'pattern-status success';
+      statusEl.textContent = 'Correct!';
+      statusEl.className = 'step-status success';
       
       setTimeout(() => {
-        goToStep2();
+        goToStep(2);
       }, 500);
     } else {
-      // Wrong old pattern
-      document.getElementById('step1Status').textContent = 'FAILED - Wrong pattern';
-      document.getElementById('step1Status').className = 'pattern-status error';
-      setTimeout(clearPattern, 1000);
+      statusEl.textContent = 'FAILED - Wrong pattern';
+      statusEl.className = 'step-status error';
+      setTimeout(() => clearModalGrid(1), 1500);
     }
   };
   
-  function goToStep2() {
-    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('passwordStep2').classList.add('active');
-    
-    document.getElementById('step1').classList.remove('active');
-    document.getElementById('step1').classList.add('completed');
-    document.getElementById('step2').classList.add('active');
-    
-    clearPattern();
-  }
-  
   window.backToStep1 = function() {
-    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('passwordStep1').classList.add('active');
-    
-    document.getElementById('step2').classList.remove('active');
-    document.getElementById('step1').classList.add('active');
-    document.getElementById('step1').classList.remove('completed');
-    
-    clearPattern();
+    goToStep(1);
+    clearModalGrid(1);
   };
   
   window.saveNewPatternStep = function() {
-    if (currentPattern.length < 3) {
-      document.getElementById('step2Status').textContent = 'Draw at least 3 dots';
+    if (modalPattern.length < 3) return;
+    
+    // Check if same as old
+    if (JSON.stringify(modalPattern) === JSON.stringify(savedPattern)) {
+      document.getElementById('step2Status').textContent = 'FAILED - Must be different from old';
+      document.getElementById('step2Status').className = 'step-status error';
       return;
     }
     
-    // Check if same as old pattern
-    if (JSON.stringify(currentPattern) === JSON.stringify(savedPattern)) {
-      document.getElementById('step2Status').textContent = 'New pattern must be different';
-      document.getElementById('step2Status').className = 'pattern-status error';
-      return;
-    }
-    
-    tempNewPattern = [...currentPattern];
+    tempNewPattern = [...modalPattern];
     document.getElementById('step2Status').textContent = 'Pattern saved!';
-    document.getElementById('step2Status').className = 'pattern-status success';
+    document.getElementById('step2Status').className = 'step-status success';
     
     setTimeout(() => {
-      goToStep3();
+      goToStep(3);
     }, 500);
   };
   
-  function goToStep3() {
-    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('passwordStep3').classList.add('active');
-    
-    document.getElementById('step2').classList.remove('active');
-    document.getElementById('step2').classList.add('completed');
-    document.getElementById('step3').classList.add('active');
-    
-    clearPattern();
-  }
-  
   window.backToStep2 = function() {
-    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('passwordStep2').classList.add('active');
-    
-    document.getElementById('step3').classList.remove('active');
-    document.getElementById('step2').classList.add('active');
-    document.getElementById('step2').classList.remove('completed');
-    
+    goToStep(2);
     tempNewPattern = null;
-    clearPattern();
+    clearModalGrid(2);
   };
   
   window.confirmNewPattern = async function() {
-    if (currentPattern.length < 3) {
-      document.getElementById('step3Status').textContent = 'Draw pattern to confirm';
-      return;
-    }
+    if (modalPattern.length < 3) return;
     
-    const isMatch = JSON.stringify(currentPattern) === JSON.stringify(tempNewPattern);
+    const isMatch = JSON.stringify(modalPattern) === JSON.stringify(tempNewPattern);
+    const statusEl = document.getElementById('step3Status');
     
     if (isMatch) {
-      // Patterns match - save to Firebase
       try {
         await setDoc(doc(db, 'admin', 'patternLock'), {
-          pattern: currentPattern,
+          pattern: modalPattern,
           updatedAt: new Date().toISOString()
         });
         
-        savedPattern = [...currentPattern];
-        document.getElementById('step3Status').textContent = 'Pattern changed successfully!';
-        document.getElementById('step3Status').className = 'pattern-status success';
+        savedPattern = [...modalPattern];
+        statusEl.textContent = 'Pattern changed successfully!';
+        statusEl.className = 'step-status success';
         
         setTimeout(() => {
           closeChangePassword();
-          // Auto-unlock with new pattern
           unlockAdmin();
         }, 1000);
         
       } catch (err) {
-        document.getElementById('step3Status').textContent = 'Error saving: ' + err.message;
-        document.getElementById('step3Status').className = 'pattern-status error';
+        statusEl.textContent = 'Error saving: ' + err.message;
+        statusEl.className = 'step-status error';
       }
     } else {
-      // Patterns don't match
-      document.getElementById('step3Status').textContent = 'FAILED - Patterns do not match';
-      document.getElementById('step3Status').className = 'pattern-status error';
-      setTimeout(clearPattern, 1500);
+      statusEl.textContent = 'FAILED - Patterns do not match';
+      statusEl.className = 'step-status error';
+      setTimeout(() => clearModalGrid(3), 1500);
     }
   };
   
-  // Enable/disable buttons based on pattern length
-  setInterval(() => {
-    if (changePasswordMode) {
-      const step2Btn = document.getElementById('step2Btn');
-      const step3Btn = document.getElementById('step3Btn');
-      
-      if (step2Btn && document.getElementById('passwordStep2').classList.contains('active')) {
-        step2Btn.disabled = currentPattern.length < 3;
-      }
-      
-      if (step3Btn && document.getElementById('passwordStep3').classList.contains('active')) {
-        step3Btn.disabled = currentPattern.length < 3;
-      }
-    }
-  }, 100);
+  function goToStep(step) {
+    currentStep = step;
+    
+    // Update step indicators
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+      d.classList.remove('active', 'completed');
+      if (i + 1 < step) d.classList.add('completed');
+      if (i + 1 === step) d.classList.add('active');
+    });
+    
+    // Show current step
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById(`passwordStep${step}`).classList.add('active');
+    
+    // Clear pattern for new step
+    modalPattern = [];
+    modalIsDrawing = false;
+  }
   
   // Make functions globally available
   window.clearPattern = window.clearPattern;
