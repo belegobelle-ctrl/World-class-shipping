@@ -60,13 +60,13 @@
     .pattern-subtitle {
       font-size: 14px;
       color: #7f8c8d;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     
     .pattern-status {
-      font-size: 14px;
-      font-weight: 600;
-      height: 20px;
+      font-size: 16px;
+      font-weight: 700;
+      height: 24px;
       margin-bottom: 15px;
       transition: all 0.3s;
     }
@@ -77,6 +77,18 @@
     
     .pattern-status.success {
       color: #27ae60;
+    }
+    
+    .pattern-status.failed {
+      color: #e74c3c;
+      font-size: 18px;
+      animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
     }
     
     .pattern-grid {
@@ -124,12 +136,6 @@
       background: #e74c3c;
       border-color: #c0392b;
       animation: shake 0.5s;
-    }
-    
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
     }
     
     .pattern-canvas {
@@ -219,19 +225,66 @@
       text-decoration: underline;
     }
     
-    .pattern-setup-hint {
-      background: #e8f4f8;
-      border-left: 4px solid #3498db;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      text-align: left;
-      font-size: 14px;
-      color: #2c3e50;
+    /* Change Password Modal */
+    .change-password-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 10001;
+      align-items: center;
+      justify-content: center;
     }
     
-    .pattern-setup-hint strong {
+    .change-password-modal.show {
+      display: flex;
+    }
+    
+    .change-password-box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 350px;
+      width: 90%;
+      text-align: center;
+    }
+    
+    .change-password-box h3 {
       color: #0a2a66;
+      margin-bottom: 20px;
+    }
+    
+    .password-step {
+      display: none;
+    }
+    
+    .password-step.active {
+      display: block;
+    }
+    
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e0e0e0;
+    }
+    
+    .step-dot.active {
+      background: #0a2a66;
+    }
+    
+    .step-dot.completed {
+      background: #27ae60;
     }
     
     /* ===== EXISTING ADMIN CSS ===== */
@@ -671,13 +724,7 @@
 <div class="pattern-overlay" id="patternOverlay">
   <div class="pattern-container">
     <div class="pattern-title">🔒 Admin Access</div>
-    <div class="pattern-subtitle" id="patternSubtitle">Enter your pattern to continue</div>
-    
-    <div class="pattern-setup-hint" id="setupHint" style="display: none;">
-      <strong>Create your pattern:</strong><br>
-      Connect at least 3 dots to create your pattern lock.<br>
-      Remember: <strong>2 → 4 → 1</strong> (example: top-middle, middle-left, top-left)
-    </div>
+    <div class="pattern-subtitle" id="patternSubtitle">Draw pattern to unlock</div>
     
     <div class="pattern-status" id="patternStatus"></div>
     
@@ -710,7 +757,44 @@
     </div>
     
     <div class="pattern-forgot">
-      <a href="#" onclick="forgotPattern(event)">Forgot pattern? Reset here</a>
+      <a href="#" onclick="showChangePassword(event)">Forgot password? Change pattern</a>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="change-password-modal" id="changePasswordModal">
+  <div class="change-password-box">
+    <h3>🔐 Change Pattern</h3>
+    
+    <div class="step-indicator">
+      <div class="step-dot active" id="step1"></div>
+      <div class="step-dot" id="step2"></div>
+      <div class="step-dot" id="step3"></div>
+    </div>
+    
+    <!-- Step 1: Enter Old Pattern -->
+    <div class="password-step active" id="passwordStep1">
+      <p style="margin-bottom: 15px; color: #666;">Enter your <strong>current</strong> pattern</p>
+      <div class="pattern-status" id="step1Status" style="height: 20px; margin-bottom: 10px;"></div>
+      <button class="pattern-btn pattern-btn-primary" onclick="verifyOldPattern()">Continue</button>
+      <button class="pattern-btn pattern-btn-secondary" onclick="closeChangePassword()" style="margin-left: 10px;">Cancel</button>
+    </div>
+    
+    <!-- Step 2: Enter New Pattern -->
+    <div class="password-step" id="passwordStep2">
+      <p style="margin-bottom: 15px; color: #666;">Draw your <strong>new</strong> pattern</p>
+      <div class="pattern-status" id="step2Status" style="height: 20px; margin-bottom: 10px;"></div>
+      <button class="pattern-btn pattern-btn-primary" onclick="saveNewPatternStep()" disabled id="step2Btn">Continue</button>
+      <button class="pattern-btn pattern-btn-secondary" onclick="backToStep1()">Back</button>
+    </div>
+    
+    <!-- Step 3: Confirm New Pattern -->
+    <div class="password-step" id="passwordStep3">
+      <p style="margin-bottom: 15px; color: #666;">Draw your <strong>new</strong> pattern again to confirm</p>
+      <div class="pattern-status" id="step3Status" style="height: 20px; margin-bottom: 10px;"></div>
+      <button class="pattern-btn pattern-btn-primary" onclick="confirmNewPattern()" disabled id="step3Btn">Save Pattern</button>
+      <button class="pattern-btn pattern-btn-secondary" onclick="backToStep2()">Back</button>
     </div>
   </div>
 </div>
@@ -871,16 +955,15 @@
 <!-- Pattern Lock JavaScript -->
 <script type="module">
   import { db } from './firebase.js';
-  import { doc, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+  import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
   
   // ===== PATTERN LOCK CONFIGURATION =====
-  // Default pattern: 2 → 4 → 1 (can be changed by user)
-  const DEFAULT_PATTERN = [2, 4, 1];
+  const DEFAULT_PATTERN = [2, 4, 1]; // Default: 2→4→1
   let currentPattern = [];
   let isDrawing = false;
-  let isSetupMode = false;
   let savedPattern = null;
-  let tempPattern = null;
+  let tempNewPattern = null;
+  let changePasswordMode = false;
   
   // Initialize
   document.addEventListener('DOMContentLoaded', async () => {
@@ -892,40 +975,21 @@
       const patternDoc = await getDoc(doc(db, 'admin', 'patternLock'));
       
       if (!patternDoc.exists()) {
-        // First time - use default pattern
-        isSetupMode = true;
+        // First time - save default pattern
         savedPattern = DEFAULT_PATTERN;
         await setDoc(doc(db, 'admin', 'patternLock'), {
           pattern: DEFAULT_PATTERN,
-          createdAt: new Date().toISOString(),
-          isDefault: true
+          createdAt: new Date().toISOString()
         });
-        showSetupUI();
       } else {
         savedPattern = patternDoc.data().pattern;
-        isSetupMode = false;
-        showUnlockUI();
       }
       
       setupPatternEvents();
     } catch (err) {
       console.error('Pattern init error:', err);
-      showStatus('Error loading pattern lock', 'error');
+      showStatus('Error loading pattern', 'error');
     }
-  }
-  
-  function showSetupUI() {
-    document.getElementById('patternSubtitle').textContent = 'Create your pattern (Default: 2→4→1)';
-    document.getElementById('setupHint').style.display = 'block';
-    document.getElementById('confirmBtn').textContent = 'Save Pattern';
-    document.querySelector('.pattern-forgot').style.display = 'none';
-  }
-  
-  function showUnlockUI() {
-    document.getElementById('patternSubtitle').textContent = 'Enter your pattern to continue';
-    document.getElementById('setupHint').style.display = 'none';
-    document.getElementById('confirmBtn').textContent = 'Unlock';
-    document.querySelector('.pattern-forgot').style.display = 'block';
   }
   
   function setupPatternEvents() {
@@ -959,7 +1023,10 @@
     currentPattern = [dotIndex];
     updateDots();
     drawLines();
-    showStatus('Continue drawing...', 'normal');
+    
+    if (!changePasswordMode) {
+      showStatus('', 'normal');
+    }
   }
   
   function enterDot(dotIndex) {
@@ -977,13 +1044,20 @@
     isDrawing = false;
     
     const confirmBtn = document.getElementById('confirmBtn');
+    
     if (currentPattern.length >= 3) {
       confirmBtn.disabled = false;
-      showStatus('Pattern complete! Click ' + (isSetupMode ? 'Save' : 'Unlock'), 'success');
+      
+      if (!changePasswordMode) {
+        // Auto-verify for main unlock
+        verifyAndUnlock();
+      }
     } else {
       confirmBtn.disabled = true;
-      showStatus('Connect at least 3 dots', 'error');
-      setTimeout(clearPattern, 1000);
+      if (!changePasswordMode) {
+        showStatus('FAILED', 'failed');
+        setTimeout(clearPattern, 1000);
+      }
     }
   }
   
@@ -1025,7 +1099,6 @@
       }
     }
     
-    // Hide unused lines
     for (let i = currentPattern.length - 1; i < 8; i++) {
       if (lines[i]) lines[i].classList.remove('show');
     }
@@ -1040,41 +1113,12 @@
     showStatus('', 'normal');
   };
   
-  window.confirmPattern = async function() {
-    if (currentPattern.length < 3) return;
-    
-    if (isSetupMode) {
-      await saveNewPattern(currentPattern);
-    } else {
-      await verifyPattern(currentPattern);
-    }
-  };
-  
-  async function saveNewPattern(pattern) {
-    try {
-      await setDoc(doc(db, 'admin', 'patternLock'), {
-        pattern: pattern,
-        updatedAt: new Date().toISOString(),
-        isDefault: false
-      });
-      
-      savedPattern = pattern;
-      showStatus('Pattern saved successfully!', 'success');
-      
-      setTimeout(() => {
-        unlockAdmin();
-      }, 1000);
-      
-    } catch (err) {
-      showStatus('Error saving pattern: ' + err.message, 'error');
-    }
-  }
-  
-  async function verifyPattern(pattern) {
-    const isMatch = JSON.stringify(pattern) === JSON.stringify(savedPattern);
+  async function verifyAndUnlock() {
+    const isMatch = JSON.stringify(currentPattern) === JSON.stringify(savedPattern);
     
     if (isMatch) {
-      showStatus('Pattern correct! Unlocking...', 'success');
+      // CORRECT PATTERN
+      showStatus('SUCCESS', 'success');
       document.querySelectorAll('.pattern-dot').forEach(d => {
         d.classList.remove('active');
         d.classList.add('correct');
@@ -1085,7 +1129,8 @@
         unlockAdmin();
       }, 800);
     } else {
-      showStatus('Wrong pattern! Try again.', 'error');
+      // WRONG PATTERN - SHOW FAILED
+      showStatus('FAILED', 'failed');
       document.querySelectorAll('.pattern-dot').forEach(d => {
         d.classList.remove('active');
         d.classList.add('wrong');
@@ -1100,29 +1145,9 @@
     }
   }
   
-  window.forgotPattern = async function(e) {
-    e.preventDefault();
-    
-    if (!confirm('Reset to default pattern (2→4→1)? This will erase your custom pattern.')) {
-      return;
-    }
-    
-    try {
-      await setDoc(doc(db, 'admin', 'patternLock'), {
-        pattern: DEFAULT_PATTERN,
-        resetAt: new Date().toISOString(),
-        isDefault: true
-      });
-      
-      savedPattern = DEFAULT_PATTERN;
-      isSetupMode = true;
-      showStatus('Pattern reset to default (2→4→1)', 'success');
-      showSetupUI();
-      clearPattern();
-      
-    } catch (err) {
-      showStatus('Error resetting: ' + err.message, 'error');
-    }
+  window.confirmPattern = async function() {
+    if (changePasswordMode) return;
+    await verifyAndUnlock();
   };
   
   function unlockAdmin() {
@@ -1136,10 +1161,195 @@
     status.className = 'pattern-status ' + type;
   }
   
-  // Make functions globally available for onclick handlers
+  // ===== CHANGE PASSWORD FUNCTIONS =====
+  
+  window.showChangePassword = function(e) {
+    e.preventDefault();
+    changePasswordMode = true;
+    document.getElementById('changePasswordModal').classList.add('show');
+    clearPattern();
+    resetChangePasswordSteps();
+  };
+  
+  window.closeChangePassword = function() {
+    changePasswordMode = false;
+    document.getElementById('changePasswordModal').classList.remove('show');
+    clearPattern();
+  };
+  
+  function resetChangePasswordSteps() {
+    // Reset to step 1
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('passwordStep1').classList.add('active');
+    
+    document.querySelectorAll('.step-dot').forEach(d => {
+      d.classList.remove('active', 'completed');
+    });
+    document.getElementById('step1').classList.add('active');
+    
+    document.getElementById('step1Status').textContent = '';
+    document.getElementById('step2Status').textContent = '';
+    document.getElementById('step3Status').textContent = '';
+    
+    tempNewPattern = null;
+  }
+  
+  window.verifyOldPattern = async function() {
+    if (currentPattern.length < 3) {
+      document.getElementById('step1Status').textContent = 'Draw a pattern first';
+      document.getElementById('step1Status').className = 'pattern-status error';
+      return;
+    }
+    
+    const isMatch = JSON.stringify(currentPattern) === JSON.stringify(savedPattern);
+    
+    if (isMatch) {
+      // Old pattern correct - go to step 2
+      document.getElementById('step1Status').textContent = 'Correct!';
+      document.getElementById('step1Status').className = 'pattern-status success';
+      
+      setTimeout(() => {
+        goToStep2();
+      }, 500);
+    } else {
+      // Wrong old pattern
+      document.getElementById('step1Status').textContent = 'FAILED - Wrong pattern';
+      document.getElementById('step1Status').className = 'pattern-status error';
+      setTimeout(clearPattern, 1000);
+    }
+  };
+  
+  function goToStep2() {
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('passwordStep2').classList.add('active');
+    
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step1').classList.add('completed');
+    document.getElementById('step2').classList.add('active');
+    
+    clearPattern();
+  }
+  
+  window.backToStep1 = function() {
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('passwordStep1').classList.add('active');
+    
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('step1').classList.remove('completed');
+    
+    clearPattern();
+  };
+  
+  window.saveNewPatternStep = function() {
+    if (currentPattern.length < 3) {
+      document.getElementById('step2Status').textContent = 'Draw at least 3 dots';
+      return;
+    }
+    
+    // Check if same as old pattern
+    if (JSON.stringify(currentPattern) === JSON.stringify(savedPattern)) {
+      document.getElementById('step2Status').textContent = 'New pattern must be different';
+      document.getElementById('step2Status').className = 'pattern-status error';
+      return;
+    }
+    
+    tempNewPattern = [...currentPattern];
+    document.getElementById('step2Status').textContent = 'Pattern saved!';
+    document.getElementById('step2Status').className = 'pattern-status success';
+    
+    setTimeout(() => {
+      goToStep3();
+    }, 500);
+  };
+  
+  function goToStep3() {
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('passwordStep3').classList.add('active');
+    
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step2').classList.add('completed');
+    document.getElementById('step3').classList.add('active');
+    
+    clearPattern();
+  }
+  
+  window.backToStep2 = function() {
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('passwordStep2').classList.add('active');
+    
+    document.getElementById('step3').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    document.getElementById('step2').classList.remove('completed');
+    
+    tempNewPattern = null;
+    clearPattern();
+  };
+  
+  window.confirmNewPattern = async function() {
+    if (currentPattern.length < 3) {
+      document.getElementById('step3Status').textContent = 'Draw pattern to confirm';
+      return;
+    }
+    
+    const isMatch = JSON.stringify(currentPattern) === JSON.stringify(tempNewPattern);
+    
+    if (isMatch) {
+      // Patterns match - save to Firebase
+      try {
+        await setDoc(doc(db, 'admin', 'patternLock'), {
+          pattern: currentPattern,
+          updatedAt: new Date().toISOString()
+        });
+        
+        savedPattern = [...currentPattern];
+        document.getElementById('step3Status').textContent = 'Pattern changed successfully!';
+        document.getElementById('step3Status').className = 'pattern-status success';
+        
+        setTimeout(() => {
+          closeChangePassword();
+          // Auto-unlock with new pattern
+          unlockAdmin();
+        }, 1000);
+        
+      } catch (err) {
+        document.getElementById('step3Status').textContent = 'Error saving: ' + err.message;
+        document.getElementById('step3Status').className = 'pattern-status error';
+      }
+    } else {
+      // Patterns don't match
+      document.getElementById('step3Status').textContent = 'FAILED - Patterns do not match';
+      document.getElementById('step3Status').className = 'pattern-status error';
+      setTimeout(clearPattern, 1500);
+    }
+  };
+  
+  // Enable/disable buttons based on pattern length
+  setInterval(() => {
+    if (changePasswordMode) {
+      const step2Btn = document.getElementById('step2Btn');
+      const step3Btn = document.getElementById('step3Btn');
+      
+      if (step2Btn && document.getElementById('passwordStep2').classList.contains('active')) {
+        step2Btn.disabled = currentPattern.length < 3;
+      }
+      
+      if (step3Btn && document.getElementById('passwordStep3').classList.contains('active')) {
+        step3Btn.disabled = currentPattern.length < 3;
+      }
+    }
+  }, 100);
+  
+  // Make functions globally available
   window.clearPattern = window.clearPattern;
   window.confirmPattern = window.confirmPattern;
-  window.forgotPattern = window.forgotPattern;
+  window.showChangePassword = window.showChangePassword;
+  window.closeChangePassword = window.closeChangePassword;
+  window.verifyOldPattern = window.verifyOldPattern;
+  window.backToStep1 = window.backToStep1;
+  window.saveNewPatternStep = window.saveNewPatternStep;
+  window.backToStep2 = window.backToStep2;
+  window.confirmNewPattern = window.confirmNewPattern;
 </script>
 
 </body>
