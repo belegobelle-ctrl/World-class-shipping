@@ -8,35 +8,201 @@
 </head>
 <body>
 
-<header class="navbar">
-  <div class="logo">worldclassshipping</div>
-  <nav>
-    <a href="#">About Us</a>
-    <a href="#">Services</a>
-    <a class="active" href="#">Track</a>
-    <a href="#">Careers</a>
-    <a href="#">Contact Us</a>
-  </nav>
-</header>
-
+<!-- HERO -->
 <section class="hero">
-  <div class="overlay">
-    <h1>TRACK YOUR SHIPMENT</h1>
-    <p>Get the status of your shipment quickly. Real-time updates for your package.</p>
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <span class="tag">PREMIUM SHIPPING & LOGISTICS</span>
+    <h1>Ship Your Goods<br>Across the Globe</h1>
+    <p>Real-time tracking, white-glove handling, and seamless delivery for your most valuable assets. From coast to coast, border to border.</p>
 
-    <div class="tracker-box">
-      <label>TRACKING NUMBER</label>
-      <input type="text" id="trackingNumber" placeholder="Enter tracking number" />
-      <button onclick="trackShipment()">TRACK</button>
-
-      <div id="trackingResult" style="margin-top:20px; padding:10px; background:#f0f0f0; border-radius:5px;"></div>
+    <div class="tracker-card">
+      <div class="tracker-header">
+        <span class="dot"></span>
+        <span>TRACK YOUR SHIPMENT</span>
+      </div>
+      <input type="text" id="trackingNumber" placeholder="Enter tracking number (e.g., EC-2026)" />
+      <button onclick="trackShipment()">
+        TRACK <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <div id="trackingResult"></div>
     </div>
   </div>
 </section>
 
+<!-- SERVICES -->
+<section class="services">
+  <div class="container">
+    <span class="section-tag">OUR SERVICES</span>
+    <h2>Logistics Solutions<br>For Every Need</h2>
+
+    <div class="service-cards">
+      <div class="service-card">
+        <div class="service-img">
+          <img src="https://i.postimg.cc/SNYVFWqH/IMG-20260507-WA0030(1).jpg" alt="Road Freight Truck" />
+        </div>
+        <div class="service-info">
+          <span class="service-tag">COST-EFFICIENT & RELIABLE</span>
+          <h3>Open Auto Transport</h3>
+          <p>Standard open-carrier shipping for everyday vehicles. Economical and secure with real-time GPS tracking. The most popular choice for dealerships, relocations, and online purchases.</p>
+          <div class="service-meta">
+            <div><strong>8-10 Vehicles</strong><span>Capacity</span></div>
+            <div><strong>5-10 Days</strong><span>Transit Time</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-img">
+          <img src="https://i.postimg.cc/c4tTyQZ2/IMG-20260508-WA0000.jpg" alt="Air Freight Plane" />
+        </div>
+        <div class="service-info">
+          <span class="service-tag">PRIORITY DELIVERY</span>
+          <h3>Expedited Shipping</h3>
+          <p>Dedicated single-vehicle transport with guaranteed delivery windows. Perfect for time-sensitive relocations, dealer trades, or auction purchases requiring immediate turnaround.</p>
+          <div class="service-meta">
+            <div><strong>1-2 Vehicles</strong><span>Capacity</span></div>
+            <div><strong>1-3 Days</strong><span>Transit Time</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NETWORK -->
+<section class="network">
+  <div class="container">
+    <span class="section-tag">NATIONWIDE COVERAGE</span>
+    <h2>Strategic Network<br>of Logistics Hubs</h2>
+    <p class="network-desc">We operate a dense network of terminals and partner facilities across North America, Europe, and key Asian markets — ensuring your cargo never travels far from a professional handling point.</p>
+
+    <div class="hub-grid">
+      <div class="hub-card">
+        <div class="hub-icon">🇺🇸</div>
+        <h4>Domestic U.S.</h4>
+        <p>Coast-to-coast coverage with 48-state door-to-door service and Alaska/Hawaii options.</p>
+      </div>
+      <div class="hub-card">
+        <div class="hub-icon">🌐</div>
+        <h4>International</h4>
+        <p>Containerized ocean freight and air cargo to 120+ countries with customs brokerage.</p>
+      </div>
+      <div class="hub-card">
+        <div class="hub-icon">🏢</div>
+        <h4>Corporate Fleet</h4>
+        <p>Dedicated contracts for OEMs, rental companies, and dealership groups with volume pricing.</p>
+      </div>
+      <div class="hub-card">
+        <div class="hub-icon">⚡</div>
+        <h4>EV Specialists</h4>
+        <p>Certified handling for electric vehicles including battery safety protocols and charging logistics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works">
+  <div class="container">
+    <span class="section-tag">HOW IT WORKS</span>
+    <h2>Seamless<br>Shipping Experience</h2>
+
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h4>Instant Quote</h4>
+        <ul>
+          <li>AI-driven price modeling based on route, season, and vehicle type</li>
+          <li>Transparent all-in pricing with no hidden fees</li>
+          <li>Lock your rate for 7 days</li>
+        </ul>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h4>Smart Dispatch</h4>
+        <ul>
+          <li>Automated carrier matching within our vetted network</li>
+          <li>Real-time availability and capacity optimization</li>
+          <li>Pickup scheduling with 4-hour windows</li>
+        </ul>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h4>Live Tracking</h4>
+        <ul>
+          <li>GPS location updates every 30 minutes</li>
+          <li>Photo documentation at pickup and delivery</li>
+          <li>24/7 concierge support via SMS, email, or phone</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="container">
+    <div class="stat-item">
+      <span class="stat-num">50K+</span>
+      <span class="stat-label">Vehicles Shipped</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">99.2%</span>
+      <span class="stat-label">Damage-Free Rate</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">4.8★</span>
+      <span class="stat-label">Average Rating</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">48h</span>
+      <span class="stat-label">Avg. Pickup Window</span>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust">
+  <div class="container">
+    <span class="section-tag">LICENSED & BONDED</span>
+    <h2>Your Trust<br>Is Our Priority</h2>
+    <p>Every shipment is fully insured up to $1,000,000. Our carriers are FMCSA-authorized, background-checked, and rated in real time. We don't just move vehicles — we protect investments.</p>
+
+    <div class="trust-grid">
+      <div class="trust-card">
+        <div class="trust-icon">🛡️</div>
+        <h4>Fully Insured</h4>
+        <span>Up to $1M Coverage</span>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">✓</div>
+        <h4>FMCSA Licensed</h4>
+        <span>USDOT Authorized</span>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">🔒</div>
+        <h4>Secure Payments</h4>
+        <span>Escrow Protection</span>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon">📋</div>
+        <h4>BOL Guarantee</h4>
+        <span>Signed Documentation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
 <footer>
-  <p>© worldclassshipping Limited. All Rights Reserved</p>
+  <div class="footer-brand">
+    <span class="footer-logo">worldclassshipping</span>
+    <p>Premium logistics for the future. Real-time tracking, white-glove service, global coverage. Licensed, bonded, and insured.</p>
+  </div>
+  <p class="footer-copy">© 2026 worldclassshipping Limited. All Rights Reserved</p>
 </footer>
+
 <script type="module" src="firebase.js"></script>
 <script type="module" src="indexscript.js"></script>
 </body>

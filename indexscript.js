@@ -9,31 +9,28 @@ async function trackShipment() {
   resultBox.innerHTML = "";
 
   if (!trackingNumber) {
-    resultBox.innerHTML = "<p style='color:red'>Please enter a tracking number.</p>";
+    resultBox.innerHTML = "<p style='color:#ff5555'>Please enter a tracking number.</p>";
     return;
   }
 
   try {
-    // Show loading
-    resultBox.innerHTML = "<p>Searching...</p>";
-    
+    resultBox.innerHTML = "<p style='color:#888'>Searching...</p>";
+
     const shipment = await shipmentService.getByTrackingNumber(trackingNumber);
-    
+
     if (!shipment) {
-      resultBox.innerHTML = "<p style='color:red'>Tracking number not found.</p>";
+      resultBox.innerHTML = "<p style='color:#ff5555'>Tracking number not found.</p>";
       return;
     }
 
-    // Redirect to track page with the tracking number
     window.location.href = `track.html?tn=${trackingNumber.toUpperCase()}`;
 
   } catch (err) {
     console.error("Error:", err);
-    resultBox.innerHTML = "<p style='color:red'>Error searching. Please try again.</p>";
+    resultBox.innerHTML = "<p style='color:#ff5555'>Error searching. Please try again.</p>";
   }
 }
 
-// Allow Enter key to submit
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById("trackingNumber");
   if (input) {
@@ -45,5 +42,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Make function available globally
 window.trackShipment = trackShipment;

@@ -782,6 +782,108 @@
       padding: 40px;
       color: #7f8c8d;
     }
+
+    /* ===== MEDIA SECTION STYLES ===== */
+    .media-section {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .media-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .media-type-selector {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .media-type-btn {
+      padding: 12px 24px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .media-type-btn:hover {
+      border-color: #0a2a66;
+      color: #0a2a66;
+    }
+
+    .media-type-btn.active {
+      background: #0a2a66;
+      border-color: #0a2a66;
+      color: white;
+    }
+
+    .media-preview-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f8f9fa;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .media-placeholder {
+      color: #7f8c8d;
+      font-size: 14px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .media-placeholder-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .media-preview {
+      display: none;
+      width: 100%;
+    }
+
+    .media-preview img,
+    .media-preview video {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .media-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .media-controls.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>

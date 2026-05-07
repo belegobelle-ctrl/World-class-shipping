@@ -24,7 +24,8 @@ console.log('🔧 Cloudinary Config:', {
 
 // State
 let shipments = [];
-let selectedVideoFile = null;
+let selectedMediaFile = null;
+let currentMediaType = "none";
 
 // ==========================================
 // LOGGING HELPERS
@@ -68,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   generateNewTracking();
-  setupVideoHandlers();
+  setupMediaHandlers();
   loadShipments();
   
   log('Admin ready');
@@ -341,7 +342,7 @@ function renderTable() {
   }
   
   tbody.innerHTML = shipments.map(s => {
-    const hasVideo = s.videoUrl && s.videoUrl.trim() !== '';
+
     
     return `
       <tr>
@@ -359,7 +360,7 @@ function renderTable() {
           ">${s.status || '-'}</span>
         </td>
         <td>${s.lastUpdate || '-'}</td>
-        <td>${hasVideo ? `<a href="${s.videoUrl}" target="_blank" class="video-link">📹 View</a>` : '-'}</td>
+        <td>${s.mediaUrl ? `<a href="${s.mediaUrl}" target="_blank" class="video-link">${s.mediaType === 'photo' ? '📷 View' : '📹 View'}</a>` : '-'}</td>
         <td>
           <div class="table-actions">
             <button class="btn-edit" onclick="editShipment('${s.trackingNumber}')">Edit</button>
@@ -393,12 +394,8 @@ window.saveShipment = async function() {
     return;
   }
   
-  const videoUrl = videoUrlEl ? videoUrlEl.value.trim() : '';
-  if (!videoUrl) {
-    showErr('Please upload a video of the shipment');
-    document.getElementById('videoInput')?.click();
-    return;
-  }
+  const mediaType = document.getElementById('mediaType')?.value || 'none';
+  const mediaUrl = document.getElementById('mediaUrl')?.value?.trim() || '';
 
   const data = {
     trackingNumber: document.getElementById("tracking").value.toUpperCase().trim(),
@@ -410,7 +407,8 @@ window.saveShipment = async function() {
     status: document.getElementById("status")?.value?.trim() || 'Package Received',
     lastUpdate: document.getElementById("lastUpdate")?.value?.trim() || new Date().toLocaleString(),
     estDelivery: document.getElementById("estDelivery")?.value?.trim() || '',
-    videoUrl: videoUrl,
+    mediaType: mediaType,
+    mediaUrl: mediaUrl,
     updatedAt: new Date().toISOString()
   };
 
@@ -483,7 +481,8 @@ window.editShipment = function(tn) {
       fileNameEl.innerHTML = `Current: <a href="${s.videoUrl}" target="_blank" style="color: #3498db;">View Video</a>`;
     }
   } else {
-    clearVideo();
+    setMediaType('none');
+  clearMedia();
   }
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -506,7 +505,8 @@ window.resetForm = function() {
   const statusEl = document.getElementById("status");
   if (statusEl) statusEl.value = '';
   
-  clearVideo();
+  setMediaType('none');
+  clearMedia();
   
   showOk('Form reset - Ready for new shipment');
   log('Form reset');
