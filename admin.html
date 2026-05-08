@@ -782,7 +782,7 @@
       padding: 40px;
       color: #7f8c8d;
     }
-
+  
     /* ===== MEDIA SECTION STYLES ===== */
     .media-section {
       text-align: center;
@@ -884,7 +884,7 @@
     .media-controls.hidden {
       display: none;
     }
-  </style>
+</style>
 </head>
 <body>
 
@@ -1071,37 +1071,52 @@
     
     <input type="hidden" id="tracking">
     
-    <div class="video-section">
-      <div class="video-title">
-        <span>📹</span>
-        <span>Shipment Video (Required)</span>
+        <div class="media-section">
+      <div class="media-title">
+        <span>📎</span>
+        <span>Shipment Media <small style="font-weight:400;color:#888;">(Optional — Photo, Video, or None)</small></span>
       </div>
-      
-      <div class="video-container" id="videoPreviewContainer">
-        <div class="video-placeholder">
-          <div class="video-placeholder-icon">🎥</div>
-          <p>No video selected</p>
-          <p style="font-size: 12px; margin-top: 5px;">Upload a video of the item being packaged</p>
+
+      <div class="media-type-selector">
+        <button type="button" class="media-type-btn" id="btnNone" onclick="setMediaType('none')" title="No media">
+          <span>❌</span> None
+        </button>
+        <button type="button" class="media-type-btn" id="btnPhoto" onclick="setMediaType('photo')" title="Upload a photo">
+          <span>📷</span> Photo
+        </button>
+        <button type="button" class="media-type-btn" id="btnVideo" onclick="setMediaType('video')" title="Upload a video">
+          <span>🎬</span> Video
+        </button>
+      </div>
+
+      <input type="hidden" id="mediaType" value="none">
+      <input type="hidden" id="mediaUrl">
+
+      <div class="media-preview-wrap" id="mediaPreviewWrap">
+        <div class="media-placeholder" id="mediaPlaceholder">
+          <div class="media-placeholder-icon">📎</div>
+          <p>No media selected</p>
+          <p style="font-size: 12px; margin-top: 5px;">Choose a media type above to add a photo or video</p>
         </div>
+        <div class="media-preview" id="mediaPreview"></div>
       </div>
-      
-      <input type="file" id="videoInput" accept="video/*" style="display: none;">
-      <input type="hidden" id="videoUrl">
-      
+
+      <input type="file" id="mediaInput" style="display: none;">
+
       <div class="progress-bar" id="progressBar">
         <div class="progress-fill" id="progressFill"></div>
       </div>
-      
-      <div class="file-name" id="videoFileName"></div>
-      
-      <div class="video-controls">
-        <button class="upload-btn" onclick="document.getElementById('videoInput').click()">
-          <span>📁</span> Select Video
+
+      <div class="file-name" id="mediaFileName"></div>
+
+      <div class="media-controls" id="mediaControls">
+        <button class="upload-btn" id="selectMediaBtn" onclick="document.getElementById('mediaInput').click()">
+          <span>📁</span> Select File
         </button>
-        <button class="upload-btn secondary" id="uploadVideoBtn" onclick="uploadVideo()" disabled>
+        <button class="upload-btn secondary" id="uploadMediaBtn" onclick="uploadMedia()" disabled>
           <span>☁️</span> Upload to Cloud
         </button>
-        <button class="upload-btn" id="clearVideoBtn" onclick="clearVideo()" style="background: #e74c3c; display: none;">
+        <button class="upload-btn" id="clearMediaBtn" onclick="clearMedia()" style="background: #e74c3c; display: none;">
           <span>🗑️</span> Remove
         </button>
       </div>
