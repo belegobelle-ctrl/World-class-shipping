@@ -788,7 +788,6 @@
       text-align: center;
       margin-bottom: 25px;
     }
-
     .media-title {
       font-size: 18px;
       font-weight: 600;
@@ -799,7 +798,6 @@
       justify-content: center;
       gap: 8px;
     }
-
     .media-type-selector {
       display: flex;
       gap: 10px;
@@ -807,7 +805,6 @@
       flex-wrap: wrap;
       margin-bottom: 20px;
     }
-
     .media-type-btn {
       padding: 12px 24px;
       border: 2px solid #e0e0e0;
@@ -822,18 +819,15 @@
       align-items: center;
       gap: 6px;
     }
-
     .media-type-btn:hover {
       border-color: #0a2a66;
       color: #0a2a66;
     }
-
     .media-type-btn.active {
       background: #0a2a66;
       border-color: #0a2a66;
       color: white;
     }
-
     .media-preview-wrap {
       position: relative;
       width: 100%;
@@ -848,24 +842,20 @@
       align-items: center;
       justify-content: center;
     }
-
     .media-placeholder {
       color: #7f8c8d;
       font-size: 14px;
       padding: 40px;
       text-align: center;
     }
-
     .media-placeholder-icon {
       font-size: 48px;
       margin-bottom: 10px;
     }
-
     .media-preview {
       display: none;
       width: 100%;
     }
-
     .media-preview img,
     .media-preview video {
       width: 100%;
@@ -873,38 +863,18 @@
       object-fit: contain;
       display: block;
     }
-
     .media-controls {
       display: flex;
       gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
     }
-
     .media-controls.hidden {
       display: none;
     }
 </style>
 </head>
 <body>
-<div id="scriptStatus" style="position:fixed; top:5px; right:5px; background:#333; color:#fff; padding:5px 10px; border-radius:4px; font-size:11px; z-index:99999;">⏳ Loading...</div>
-<script>
-window.addEventListener('load', function() {
-  var status = document.getElementById('scriptStatus');
-  if (status) {
-    setTimeout(function() {
-      var tracking = document.getElementById('trackingDisplay');
-      if (tracking && tracking.textContent !== 'Generating...') {
-        status.textContent = '✅ Ready';
-        status.style.background = '#27ae60';
-      } else {
-        status.textContent = '❌ Error - Check Console';
-        status.style.background = '#e74c3c';
-      }
-    }, 2000);
-  }
-});
-</script>
 
 <!-- Pattern Lock Overlay -->
 <div class="pattern-overlay" id="patternOverlay">
@@ -1089,20 +1059,20 @@ window.addEventListener('load', function() {
     
     <input type="hidden" id="tracking">
     
-        <div class="media-section">
+    <div class="media-section">
       <div class="media-title">
         <span>📎</span>
-        <span>Shipment Media <small style="font-weight:400;color:#888;">(Optional — Photo, Video, or None)</small></span>
+        <span>Shipment Media <small style="font-weight:400;color:#888;">(Optional)</small></span>
       </div>
 
       <div class="media-type-selector">
-        <button type="button" class="media-type-btn" id="btnNone" onclick="setMediaType('none')" title="No media">
+        <button type="button" class="media-type-btn" id="btnNone" onclick="setMediaType('none')">
           <span>❌</span> None
         </button>
-        <button type="button" class="media-type-btn" id="btnPhoto" onclick="setMediaType('photo')" title="Upload a photo">
+        <button type="button" class="media-type-btn" id="btnPhoto" onclick="setMediaType('photo')">
           <span>📷</span> Photo
         </button>
-        <button type="button" class="media-type-btn" id="btnVideo" onclick="setMediaType('video')" title="Upload a video">
+        <button type="button" class="media-type-btn" id="btnVideo" onclick="setMediaType('video')">
           <span>🎬</span> Video
         </button>
       </div>
@@ -1114,7 +1084,7 @@ window.addEventListener('load', function() {
         <div class="media-placeholder" id="mediaPlaceholder">
           <div class="media-placeholder-icon">📎</div>
           <p>No media selected</p>
-          <p style="font-size: 12px; margin-top: 5px;">Choose a media type above to add a photo or video</p>
+          <p style="font-size: 12px; margin-top: 5px;">Choose a media type above</p>
         </div>
         <div class="media-preview" id="mediaPreview"></div>
       </div>
@@ -1230,23 +1200,6 @@ window.addEventListener('load', function() {
 
 <script type="module" src="firebase.js"></script>
 <script type="module" src="adminscript.js"></script>
-<script>
-// Fallback: if module fails, show error after 3 seconds
-setTimeout(function() {
-  var trackingDisplay = document.getElementById('trackingDisplay');
-  var shipmentTable = document.getElementById('shipmentTable');
-
-  if (trackingDisplay && trackingDisplay.textContent === 'Generating...') {
-    trackingDisplay.textContent = 'EC-LOAD-ERROR';
-    console.error('Tracking number failed to generate - adminscript.js may not have loaded');
-  }
-
-  if (shipmentTable && shipmentTable.innerHTML.includes('Loading shipments')) {
-    shipmentTable.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Failed to load shipments. Check browser console (F12) for errors.<br><small>Common causes: Firebase config issue, ad blocker, or script not deployed.</small></td></tr>';
-    console.error('Shipments failed to load - check firebase connection and adminscript.js');
-  }
-}, 4000);
-</script>
 
 <!-- Pattern Lock JavaScript -->
 <script type="module">
@@ -1736,19 +1689,5 @@ setTimeout(function() {
   window.confirmNewPattern = window.confirmNewPattern;
 </script>
 
-
-<!-- Module load error fallback -->
-<script>
-window.onerror = function(msg, url, line) {
-  console.error('JS Error:', msg, 'at', url, 'line', line);
-  var box = document.getElementById('errorBox');
-  if (box) { box.textContent = '❌ ' + msg; box.style.display = 'block'; }
-};
-window.addEventListener('unhandledrejection', function(e) {
-  console.error('Unhandled promise rejection:', e.reason);
-  var box = document.getElementById('errorBox');
-  if (box) { box.textContent = '❌ ' + (e.reason?.message || e.reason); box.style.display = 'block'; }
-});
-</script>
 </body>
 </html>
