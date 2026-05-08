@@ -3,7 +3,7 @@ import { shipmentService } from './firebase.js';
 import { collection, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import { db } from './firebase.js';
 
-console.log('>>> adminscript.js imports loaded successfully');
+console.log('>>> adminscript.js loaded at', new Date().toISOString());
 
 // ==========================================
 // CLOUDINARY CONFIG
@@ -15,6 +15,30 @@ const CLOUDINARY_UPLOAD_PRESET = 'woldclass_uploads';
 let shipments = [];
 let selectedMediaFile = null;
 let currentMediaType = 'none';
+let isInitialized = false;
+
+// ==========================================
+// DEBUG PANEL LOGGING
+// ==========================================
+function debugLog(msg, type = 'info') {
+  const timestamp = new Date().toLocaleTimeString();
+  const prefix = `[${timestamp}]`;
+  console.log(prefix, msg);
+
+  const debugContent = document.getElementById('debugContent');
+  if (debugContent) {
+    const div = document.createElement('div');
+    div.className = 'debug-log debug-' + type;
+    div.textContent = prefix + ' ' + msg;
+    debugContent.appendChild(div);
+    debugContent.scrollTop = debugContent.scrollHeight;
+  }
+}
+
+function debugError(msg, err) {
+  debugLog('ERROR: ' + msg + (err ? ' | ' + err.message : ''), 'error');
+  console.error(msg, err);
+}
 
 // ==========================================
 // LOGGING HELPERS
@@ -48,62 +72,75 @@ function showOk(msg) {
 // ==========================================
 function initAdmin() {
   try {
-    log('Admin panel initializing...');
-    console.log('>>> DEBUG: document.readyState =', document.readyState);
-    console.log('>>> DEBUG: document.body exists?', !!document.body);
-    console.log('>>> DEBUG: Full HTML at init:', document.body ? document.body.innerHTML.substring(0, 500) + '...' : 'NO BODY');
+    if (isInitialized) {
+      debugLog('initAdmin() already ran, skipping');
+      return;
+    }
+
+    debugLog('=== INIT ADMIN STARTING ===');
+    debugLog('document.readyState = ' + document.readyState);
+    debugLog('document.body exists = ' + !!document.body);
+
+    const adminSection = document.getElementById('adminSection');
+    debugLog('adminSection element = ' + adminSection);
+    debugLog('adminSection visible = ' + (adminSection ? adminSection.classList.contains('visible') : 'N/A'));
 
     const trackingInput = document.getElementById("tracking");
     const trackingDisplay = document.getElementById("trackingDisplay");
 
-    console.log('>>> DEBUG: trackingInput element =', trackingInput);
-    console.log('>>> DEBUG: trackingDisplay element =', trackingDisplay);
+    debugLog('trackingInput element = ' + trackingInput);
+    debugLog('trackingDisplay element = ' + trackingDisplay);
 
     if (!trackingInput || !trackingDisplay) {
-      console.error('>>> DEBUG: FAILED - Required form elements not found!');
-      console.error('>>> DEBUG: Available IDs in DOM:', Array.from(document.querySelectorAll('[id]')).map(el => el.id));
-      showErr('Required form elements not found!');
+      debugError('CRITICAL: Required form elements not found!', null);
+      debugLog('Available IDs in DOM: ' + Array.from(document.querySelectorAll('[id]')).map(el => el.id).join(', '));
+      showErr('Required form elements not found! Check debug panel (🐛 button bottom-right).');
       return;
     }
 
-    console.log('>>> DEBUG: Elements found, generating tracking...');
-    const generatedTracking = generateNewTracking();
-    console.log('>>> DEBUG: generateNewTracking() returned:', generatedTracking);
-
-    console.log('>>> DEBUG: Setting up media handlers...');
+    generateNewTracking();
     setupMediaHandlers();
-
-    console.log('>>> DEBUG: Loading shipments...');
     loadShipments();
-
-    console.log('>>> DEBUG: Setting media type to none...');
     setMediaType('none');
 
-    log('Admin initialized successfully');
+    isInitialized = true;
+    debugLog('=== INIT ADMIN COMPLETE ===');
+    showOk('Admin panel ready!');
+
   } catch (err) {
-    console.error('>>> DEBUG: Init error:', err);
-    console.error('>>> DEBUG: Init error stack:', err.stack);
+    debugError('Init error:', err);
     showErr('Failed to initialize: ' + err.message);
   }
 }
 
-// Run init when DOM is ready
-console.log('>>> DEBUG: Script executing, readyState =', document.readyState);
-try {
-  if (document.readyState === 'loading') {
-    console.log('>>> DEBUG: Attaching DOMContentLoaded listener...');
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('>>> DEBUG: DOMContentLoaded fired!');
+// CRITICAL FIX: Listen for pattern unlock event
+debugLog('Setting up adminUnlocked listener...');
+window.addEventListener('adminUnlocked', () => {
+  debugLog('adminUnlocked event received!');
+  initAdmin();
+});
+
+// Fallback: if no pattern lock (direct access), init when DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    debugLog('DOMContentLoaded fired');
+    const overlay = document.getElementById('patternOverlay');
+    if (!overlay || overlay.classList.contains('hidden')) {
+      debugLog('No pattern lock detected, auto-init');
       initAdmin();
-    });
-  } else {
-    console.log('>>> DEBUG: DOM already loaded (readyState = ' + document.readyState + '), running init immediately...');
+    } else {
+      debugLog('Pattern lock active, waiting for unlock...');
+    }
+  });
+} else {
+  debugLog('DOM already loaded, checking pattern lock...');
+  const overlay = document.getElementById('patternOverlay');
+  if (!overlay || overlay.classList.contains('hidden')) {
+    debugLog('No pattern lock detected, auto-init');
     initAdmin();
+  } else {
+    debugLog('Pattern lock active, waiting for unlock...');
   }
-} catch (e) {
-  console.error('>>> DEBUG: Failed to attach init:', e);
-  console.error('>>> DEBUG: Trying direct init as fallback...');
-  try { initAdmin(); } catch (e2) { console.error('>>> DEBUG: Direct init also failed:', e2); }
 }
 
 // ==========================================
@@ -111,35 +148,29 @@ try {
 // ==========================================
 function generateNewTracking() {
   try {
-    console.log('>>> DEBUG: generateNewTracking() called');
+    debugLog('generateNewTracking() called');
     const tracking = "EC-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-    console.log('>>> DEBUG: Generated tracking string:', tracking);
 
     const input = document.getElementById("tracking");
     const display = document.getElementById("trackingDisplay");
 
-    console.log('>>> DEBUG: Input element inside generateNewTracking:', input);
-    console.log('>>> DEBUG: Display element inside generateNewTracking:', display);
-
     if (input) {
       input.value = tracking;
-      console.log('>>> DEBUG: Set input.value successfully');
+      debugLog('Set #tracking.value = ' + tracking);
     } else {
-      console.error('>>> DEBUG: CRITICAL - input element #tracking not found in generateNewTracking!');
+      debugError('#tracking input not found!', null);
     }
 
     if (display) {
       display.textContent = tracking;
-      console.log('>>> DEBUG: Set display.textContent successfully');
+      debugLog('Set #trackingDisplay.textContent = ' + tracking);
     } else {
-      console.error('>>> DEBUG: CRITICAL - display element #trackingDisplay not found in generateNewTracking!');
+      debugError('#trackingDisplay not found!', null);
     }
 
-    log('Tracking generated: ' + tracking);
     return tracking;
   } catch (err) {
-    console.error('>>> DEBUG: Generate tracking error:', err);
-    console.error('>>> DEBUG: Error stack:', err.stack);
+    debugError('Generate tracking error:', err);
     const display = document.getElementById('trackingDisplay');
     if (display) display.textContent = 'EC-ERROR';
     return null;
@@ -382,73 +413,62 @@ window.clearMedia = function() {
 // ==========================================
 function loadShipments() {
   try {
-    log('Loading shipments...');
-    console.log('>>> DEBUG: loadShipments() called');
-    console.log('>>> DEBUG: db object =', db);
-    console.log('>>> DEBUG: collection function =', collection);
-    console.log('>>> DEBUG: query function =', query);
-    console.log('>>> DEBUG: orderBy function =', orderBy);
-    console.log('>>> DEBUG: onSnapshot function =', onSnapshot);
-    console.log('>>> DEBUG: shipmentService =', shipmentService);
+    debugLog('loadShipments() called');
 
-    if (!db || !collection || !query || !orderBy || !onSnapshot) {
-      console.error('>>> DEBUG: FAILED - Firebase imports missing!');
-      console.error('>>> DEBUG: Missing details:', {
-        db: !!db, 
-        collection: !!collection, 
-        query: !!query, 
-        orderBy: !!orderBy, 
-        onSnapshot: !!onSnapshot
-      });
+    if (!db) {
+      debugError('Firebase db is undefined! Check firebase.js export.', null);
       const tbody = document.getElementById('shipmentTable');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Firebase not loaded properly. Check console.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Firebase db not loaded. Check firebase.js exports and console.</td></tr>';
+      }
+      return;
+    }
+
+    if (!collection || !query || !orderBy || !onSnapshot) {
+      debugError('Firebase Firestore imports missing', null);
+      debugLog('collection=' + !!collection + ' query=' + !!query + ' orderBy=' + !!orderBy + ' onSnapshot=' + !!onSnapshot);
+      const tbody = document.getElementById('shipmentTable');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Firebase imports missing. Check module loading.</td></tr>';
       }
       return;
     }
 
     if (!shipmentService) {
-      console.error('>>> DEBUG: FAILED - shipmentService is undefined! Check firebase.js export.');
+      debugError('shipmentService is undefined! Check firebase.js export.', null);
       const tbody = document.getElementById('shipmentTable');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Shipment service not available. Check firebase.js exports.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ shipmentService not available. Check firebase.js exports.</td></tr>';
       }
       return;
     }
 
-    console.log('>>> DEBUG: Firebase imports OK, building query...');
+    debugLog('Firebase checks passed, building query...');
     const q = query(collection(db, 'shipments'), orderBy('createdAt', 'desc'));
-    console.log('>>> DEBUG: Query built:', q);
+    debugLog('Query built, attaching onSnapshot listener...');
 
-    console.log('>>> DEBUG: Attaching onSnapshot listener...');
     onSnapshot(q, (snapshot) => {
-      console.log('>>> DEBUG: onSnapshot callback fired!');
-      console.log('>>> DEBUG: Snapshot size:', snapshot.size);
-      console.log('>>> DEBUG: Snapshot empty?', snapshot.empty);
-      console.log('>>> DEBUG: Snapshot docs:', snapshot.docs.map(d => ({id: d.id, ...d.data()})));
-
+      debugLog('onSnapshot callback fired! Docs count: ' + snapshot.size);
+      if (snapshot.empty) {
+        debugLog('Snapshot is empty - no documents in shipments collection');
+      } else {
+        debugLog('Snapshot docs: ' + snapshot.docs.map(d => d.id).join(', '));
+      }
       shipments = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-      log('Loaded ' + shipments.length + ' shipments');
-      console.log('>>> DEBUG: Shipments array populated:', shipments);
+      debugLog('Shipments array populated: ' + shipments.length + ' items');
       renderTable();
     }, (err) => {
-      console.error('>>> DEBUG: onSnapshot ERROR callback:', err);
-      console.error('>>> DEBUG: Error code:', err.code);
-      console.error('>>> DEBUG: Error message:', err.message);
+      debugError('Firebase onSnapshot error:', err);
       showErr('Firebase error: ' + err.message);
-      console.error('Firebase error:', err);
-
       const tbody = document.getElementById('shipmentTable');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Error loading shipments: ' + err.message + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Error: ' + err.message + '</td></tr>';
       }
     });
 
-    console.log('>>> DEBUG: onSnapshot listener attached successfully');
+    debugLog('onSnapshot listener attached successfully');
   } catch (err) {
-    console.error('>>> DEBUG: loadShipments outer error:', err);
-    console.error('>>> DEBUG: Error stack:', err.stack);
-    showErr('Failed to load shipments: ' + err.message);
+    debugError('loadShipments error:', err);
     const tbody = document.getElementById('shipmentTable');
     if (tbody) {
       tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ ' + err.message + '</td></tr>';
@@ -461,42 +481,46 @@ function loadShipments() {
 // ==========================================
 function renderTable() {
   try {
-    console.log('>>> DEBUG: renderTable() called, shipments count:', shipments.length);
+    debugLog('renderTable() called, shipments count: ' + shipments.length);
     const tbody = document.getElementById('shipmentTable');
-    console.log('>>> DEBUG: shipmentTable element:', tbody);
 
     if (!tbody) {
-      console.error('>>> DEBUG: CRITICAL - shipmentTable element not found!');
+      debugError('shipmentTable element not found!', null);
       return;
     }
 
     if (!shipments.length) {
-      console.log('>>> DEBUG: No shipments to render');
+      debugLog('No shipments to render');
       tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#7f8c8d;">No shipments yet. Create one above!</td></tr>';
       return;
     }
 
-    console.log('>>> DEBUG: Rendering', shipments.length, 'shipments...');
+    debugLog('Rendering ' + shipments.length + ' shipments...');
     tbody.innerHTML = shipments.map(s => {
       const hasMedia = s.mediaUrl && s.mediaUrl.trim() !== '';
       const legacyVideo = s.videoUrl && s.videoUrl.trim() !== '';
       const mediaLabel = s.mediaType === 'photo' ? '📷 View' : '📹 View';
       const mediaLink = hasMedia ? s.mediaUrl : (legacyVideo ? s.videoUrl : '');
 
+      const trackingNum = s.trackingNumber || 'N/A';
+      const recipient = s.recipient || 'N/A';
+      const status = s.status || '-';
+      const lastUpdate = s.lastUpdate || '-';
+
+      // CRITICAL FIX: Use &quot; for proper HTML quote escaping
       return '<tr>' +
-        '<td style="font-family: monospace; font-weight: 600;">' + (s.trackingNumber || 'N/A') + '</td>' +
-        '<td>' + (s.recipient || 'N/A') + '</td>' +
-        '<td><span style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; background:' + getStatusColor(s.status) + '; color:white;">' + (s.status || '-') + '</span></td>' +
-        '<td>' + (s.lastUpdate || '-') + '</td>' +
+        '<td style="font-family: monospace; font-weight: 600;">' + trackingNum + '</td>' +
+        '<td>' + recipient + '</td>' +
+        '<td><span style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; background:' + getStatusColor(status) + '; color:white;">' + status + '</span></td>' +
+        '<td>' + lastUpdate + '</td>' +
         '<td>' + (mediaLink ? '<a href="' + mediaLink + '" target="_blank" class="video-link">' + mediaLabel + '</a>' : '-') + '</td>' +
-        '<td><div class="table-actions"><button class="btn-edit" onclick="editShipment(\'' + s.trackingNumber + '\')">Edit</button><button class="btn-delete-table" onclick="removeShipment(\'' + s.trackingNumber + '\')">Delete</button></div></td>' +
+        '<td><div class="table-actions"><button class="btn-edit" onclick="editShipment(&quot;' + trackingNum + '&quot;)">Edit</button><button class="btn-delete-table" onclick="removeShipment(&quot;' + trackingNum + '&quot;)">Delete</button></div></td>' +
       '</tr>';
     }).join('');
 
-    console.log('>>> DEBUG: Table rendered successfully');
+    debugLog('Table rendered successfully with ' + shipments.length + ' rows');
   } catch (err) {
-    console.error('>>> DEBUG: renderTable error:', err);
-    console.error('>>> DEBUG: Error stack:', err.stack);
+    debugError('renderTable error:', err);
   }
 }
 
@@ -600,7 +624,7 @@ window.editShipment = function(tn) {
     document.getElementById("estDelivery").value = s.estDelivery || '';
 
     const mediaUrlEl = document.getElementById("mediaUrl");
-    const fileNameEl = document.getElementById("mediaFileName');
+    const fileNameEl = document.getElementById("mediaFileName");
 
     const savedType = s.mediaType || (s.videoUrl ? 'video' : 'none');
     setMediaType(savedType);
