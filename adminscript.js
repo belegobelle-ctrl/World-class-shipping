@@ -49,38 +49,61 @@ function showOk(msg) {
 function initAdmin() {
   try {
     log('Admin panel initializing...');
+    console.log('>>> DEBUG: document.readyState =', document.readyState);
+    console.log('>>> DEBUG: document.body exists?', !!document.body);
+    console.log('>>> DEBUG: Full HTML at init:', document.body ? document.body.innerHTML.substring(0, 500) + '...' : 'NO BODY');
 
     const trackingInput = document.getElementById("tracking");
     const trackingDisplay = document.getElementById("trackingDisplay");
 
+    console.log('>>> DEBUG: trackingInput element =', trackingInput);
+    console.log('>>> DEBUG: trackingDisplay element =', trackingDisplay);
+
     if (!trackingInput || !trackingDisplay) {
+      console.error('>>> DEBUG: FAILED - Required form elements not found!');
+      console.error('>>> DEBUG: Available IDs in DOM:', Array.from(document.querySelectorAll('[id]')).map(el => el.id));
       showErr('Required form elements not found!');
       return;
     }
 
-    generateNewTracking();
+    console.log('>>> DEBUG: Elements found, generating tracking...');
+    const generatedTracking = generateNewTracking();
+    console.log('>>> DEBUG: generateNewTracking() returned:', generatedTracking);
+
+    console.log('>>> DEBUG: Setting up media handlers...');
     setupMediaHandlers();
+
+    console.log('>>> DEBUG: Loading shipments...');
     loadShipments();
+
+    console.log('>>> DEBUG: Setting media type to none...');
     setMediaType('none');
 
     log('Admin initialized successfully');
   } catch (err) {
-    console.error('Init error:', err);
+    console.error('>>> DEBUG: Init error:', err);
+    console.error('>>> DEBUG: Init error stack:', err.stack);
     showErr('Failed to initialize: ' + err.message);
   }
 }
 
 // Run init when DOM is ready
+console.log('>>> DEBUG: Script executing, readyState =', document.readyState);
 try {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAdmin);
+    console.log('>>> DEBUG: Attaching DOMContentLoaded listener...');
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('>>> DEBUG: DOMContentLoaded fired!');
+      initAdmin();
+    });
   } else {
+    console.log('>>> DEBUG: DOM already loaded (readyState = ' + document.readyState + '), running init immediately...');
     initAdmin();
   }
 } catch (e) {
-  console.error('Failed to attach init:', e);
-  // Last resort: try init directly
-  try { initAdmin(); } catch (e2) { console.error('Direct init also failed:', e2); }
+  console.error('>>> DEBUG: Failed to attach init:', e);
+  console.error('>>> DEBUG: Trying direct init as fallback...');
+  try { initAdmin(); } catch (e2) { console.error('>>> DEBUG: Direct init also failed:', e2); }
 }
 
 // ==========================================
@@ -88,19 +111,38 @@ try {
 // ==========================================
 function generateNewTracking() {
   try {
+    console.log('>>> DEBUG: generateNewTracking() called');
     const tracking = "EC-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+    console.log('>>> DEBUG: Generated tracking string:', tracking);
+
     const input = document.getElementById("tracking");
     const display = document.getElementById("trackingDisplay");
 
-    if (input) input.value = tracking;
-    if (display) display.textContent = tracking;
+    console.log('>>> DEBUG: Input element inside generateNewTracking:', input);
+    console.log('>>> DEBUG: Display element inside generateNewTracking:', display);
+
+    if (input) {
+      input.value = tracking;
+      console.log('>>> DEBUG: Set input.value successfully');
+    } else {
+      console.error('>>> DEBUG: CRITICAL - input element #tracking not found in generateNewTracking!');
+    }
+
+    if (display) {
+      display.textContent = tracking;
+      console.log('>>> DEBUG: Set display.textContent successfully');
+    } else {
+      console.error('>>> DEBUG: CRITICAL - display element #trackingDisplay not found in generateNewTracking!');
+    }
 
     log('Tracking generated: ' + tracking);
     return tracking;
   } catch (err) {
-    console.error('Generate tracking error:', err);
-    const display = document.getElementById("trackingDisplay");
+    console.error('>>> DEBUG: Generate tracking error:', err);
+    console.error('>>> DEBUG: Error stack:', err.stack);
+    const display = document.getElementById('trackingDisplay');
     if (display) display.textContent = 'EC-ERROR';
+    return null;
   }
 }
 
@@ -341,9 +383,23 @@ window.clearMedia = function() {
 function loadShipments() {
   try {
     log('Loading shipments...');
+    console.log('>>> DEBUG: loadShipments() called');
+    console.log('>>> DEBUG: db object =', db);
+    console.log('>>> DEBUG: collection function =', collection);
+    console.log('>>> DEBUG: query function =', query);
+    console.log('>>> DEBUG: orderBy function =', orderBy);
+    console.log('>>> DEBUG: onSnapshot function =', onSnapshot);
+    console.log('>>> DEBUG: shipmentService =', shipmentService);
 
     if (!db || !collection || !query || !orderBy || !onSnapshot) {
-      console.error('Firebase imports missing:', {db: !!db, collection: !!collection, query: !!query, orderBy: !!orderBy, onSnapshot: !!onSnapshot});
+      console.error('>>> DEBUG: FAILED - Firebase imports missing!');
+      console.error('>>> DEBUG: Missing details:', {
+        db: !!db, 
+        collection: !!collection, 
+        query: !!query, 
+        orderBy: !!orderBy, 
+        onSnapshot: !!onSnapshot
+      });
       const tbody = document.getElementById('shipmentTable');
       if (tbody) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Firebase not loaded properly. Check console.</td></tr>';
@@ -351,13 +407,34 @@ function loadShipments() {
       return;
     }
 
-    const q = query(collection(db, 'shipments'), orderBy('createdAt', 'desc'));
+    if (!shipmentService) {
+      console.error('>>> DEBUG: FAILED - shipmentService is undefined! Check firebase.js export.');
+      const tbody = document.getElementById('shipmentTable');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Shipment service not available. Check firebase.js exports.</td></tr>';
+      }
+      return;
+    }
 
+    console.log('>>> DEBUG: Firebase imports OK, building query...');
+    const q = query(collection(db, 'shipments'), orderBy('createdAt', 'desc'));
+    console.log('>>> DEBUG: Query built:', q);
+
+    console.log('>>> DEBUG: Attaching onSnapshot listener...');
     onSnapshot(q, (snapshot) => {
+      console.log('>>> DEBUG: onSnapshot callback fired!');
+      console.log('>>> DEBUG: Snapshot size:', snapshot.size);
+      console.log('>>> DEBUG: Snapshot empty?', snapshot.empty);
+      console.log('>>> DEBUG: Snapshot docs:', snapshot.docs.map(d => ({id: d.id, ...d.data()})));
+
       shipments = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
       log('Loaded ' + shipments.length + ' shipments');
+      console.log('>>> DEBUG: Shipments array populated:', shipments);
       renderTable();
     }, (err) => {
+      console.error('>>> DEBUG: onSnapshot ERROR callback:', err);
+      console.error('>>> DEBUG: Error code:', err.code);
+      console.error('>>> DEBUG: Error message:', err.message);
       showErr('Firebase error: ' + err.message);
       console.error('Firebase error:', err);
 
@@ -366,8 +443,11 @@ function loadShipments() {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Error loading shipments: ' + err.message + '</td></tr>';
       }
     });
+
+    console.log('>>> DEBUG: onSnapshot listener attached successfully');
   } catch (err) {
-    console.error('loadShipments error:', err);
+    console.error('>>> DEBUG: loadShipments outer error:', err);
+    console.error('>>> DEBUG: Error stack:', err.stack);
     showErr('Failed to load shipments: ' + err.message);
     const tbody = document.getElementById('shipmentTable');
     if (tbody) {
@@ -381,14 +461,22 @@ function loadShipments() {
 // ==========================================
 function renderTable() {
   try {
+    console.log('>>> DEBUG: renderTable() called, shipments count:', shipments.length);
     const tbody = document.getElementById('shipmentTable');
-    if (!tbody) return;
+    console.log('>>> DEBUG: shipmentTable element:', tbody);
+
+    if (!tbody) {
+      console.error('>>> DEBUG: CRITICAL - shipmentTable element not found!');
+      return;
+    }
 
     if (!shipments.length) {
+      console.log('>>> DEBUG: No shipments to render');
       tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#7f8c8d;">No shipments yet. Create one above!</td></tr>';
       return;
     }
 
+    console.log('>>> DEBUG: Rendering', shipments.length, 'shipments...');
     tbody.innerHTML = shipments.map(s => {
       const hasMedia = s.mediaUrl && s.mediaUrl.trim() !== '';
       const legacyVideo = s.videoUrl && s.videoUrl.trim() !== '';
@@ -401,11 +489,14 @@ function renderTable() {
         '<td><span style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; background:' + getStatusColor(s.status) + '; color:white;">' + (s.status || '-') + '</span></td>' +
         '<td>' + (s.lastUpdate || '-') + '</td>' +
         '<td>' + (mediaLink ? '<a href="' + mediaLink + '" target="_blank" class="video-link">' + mediaLabel + '</a>' : '-') + '</td>' +
-        '<td><div class="table-actions"><button class="btn-edit" onclick="editShipment('' + s.trackingNumber + '')">Edit</button><button class="btn-delete-table" onclick="removeShipment('' + s.trackingNumber + '')">Delete</button></div></td>' +
+        '<td><div class="table-actions"><button class="btn-edit" onclick="editShipment(\'' + s.trackingNumber + '\')">Edit</button><button class="btn-delete-table" onclick="removeShipment(\'' + s.trackingNumber + '\')">Delete</button></div></td>' +
       '</tr>';
     }).join('');
+
+    console.log('>>> DEBUG: Table rendered successfully');
   } catch (err) {
-    console.error('renderTable error:', err);
+    console.error('>>> DEBUG: renderTable error:', err);
+    console.error('>>> DEBUG: Error stack:', err.stack);
   }
 }
 
@@ -509,7 +600,7 @@ window.editShipment = function(tn) {
     document.getElementById("estDelivery").value = s.estDelivery || '';
 
     const mediaUrlEl = document.getElementById("mediaUrl");
-    const fileNameEl = document.getElementById("mediaFileName");
+    const fileNameEl = document.getElementById("mediaFileName');
 
     const savedType = s.mediaType || (s.videoUrl ? 'video' : 'none');
     setMediaType(savedType);
