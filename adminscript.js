@@ -3,16 +3,13 @@ import { shipmentService } from './firebase.js';
 import { collection, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import { db } from './firebase.js';
 
+console.log('>>> adminscript.js imports loaded successfully');
+
 // ==========================================
 // CLOUDINARY CONFIG
 // ==========================================
 const CLOUDINARY_CLOUD_NAME = 'dfncwkf37';
 const CLOUDINARY_UPLOAD_PRESET = 'woldclass_uploads';
-
-console.log('Cloudinary Config:', {
-  cloudName: CLOUDINARY_CLOUD_NAME,
-  uploadPreset: CLOUDINARY_UPLOAD_PRESET
-});
 
 // State
 let shipments = [];
@@ -49,153 +46,170 @@ function showOk(msg) {
 // ==========================================
 // INITIALIZATION
 // ==========================================
-document.addEventListener("DOMContentLoaded", function () {
-  log('Admin panel loaded');
+function initAdmin() {
+  try {
+    log('Admin panel initializing...');
 
-  const trackingInput = document.getElementById("tracking");
-  const trackingDisplay = document.getElementById("trackingDisplay");
+    const trackingInput = document.getElementById("tracking");
+    const trackingDisplay = document.getElementById("trackingDisplay");
 
-  if (!trackingInput || !trackingDisplay) {
-    showErr('Required form elements not found!');
-    return;
+    if (!trackingInput || !trackingDisplay) {
+      showErr('Required form elements not found!');
+      return;
+    }
+
+    generateNewTracking();
+    setupMediaHandlers();
+    loadShipments();
+    setMediaType('none');
+
+    log('Admin initialized successfully');
+  } catch (err) {
+    console.error('Init error:', err);
+    showErr('Failed to initialize: ' + err.message);
   }
+}
 
-  generateNewTracking();
-  setupMediaHandlers();
-  loadShipments();
-
-  // Default to no media
-  setMediaType('none');
-
-  log('Admin ready');
-});
+// Run init when DOM is ready
+try {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAdmin);
+  } else {
+    initAdmin();
+  }
+} catch (e) {
+  console.error('Failed to attach init:', e);
+  // Last resort: try init directly
+  try { initAdmin(); } catch (e2) { console.error('Direct init also failed:', e2); }
+}
 
 // ==========================================
 // TRACKING NUMBER
 // ==========================================
 function generateNewTracking() {
-  const tracking = "EC-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-  document.getElementById("tracking").value = tracking;
-  const display = document.getElementById("trackingDisplay");
-  if (display) display.textContent = tracking;
-  return tracking;
+  try {
+    const tracking = "EC-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+    const input = document.getElementById("tracking");
+    const display = document.getElementById("trackingDisplay");
+
+    if (input) input.value = tracking;
+    if (display) display.textContent = tracking;
+
+    log('Tracking generated: ' + tracking);
+    return tracking;
+  } catch (err) {
+    console.error('Generate tracking error:', err);
+    const display = document.getElementById("trackingDisplay");
+    if (display) display.textContent = 'EC-ERROR';
+  }
 }
 
 // ==========================================
 // MEDIA TYPE SELECTOR
 // ==========================================
 window.setMediaType = function(type) {
-  currentMediaType = type;
+  try {
+    currentMediaType = type;
 
-  // Update buttons
-  document.querySelectorAll('.media-type-btn').forEach(btn => btn.classList.remove('active'));
-  const btnMap = { none: 'btnNone', photo: 'btnPhoto', video: 'btnVideo' };
-  const activeBtn = document.getElementById(btnMap[type]);
-  if (activeBtn) activeBtn.classList.add('active');
+    document.querySelectorAll('.media-type-btn').forEach(btn => btn.classList.remove('active'));
+    const btnMap = { none: 'btnNone', photo: 'btnPhoto', video: 'btnVideo' };
+    const activeBtn = document.getElementById(btnMap[type]);
+    if (activeBtn) activeBtn.classList.add('active');
 
-  // Update hidden input
-  const typeInput = document.getElementById('mediaType');
-  if (typeInput) typeInput.value = type;
+    const typeInput = document.getElementById('mediaType');
+    if (typeInput) typeInput.value = type;
 
-  // Show/hide controls
-  const controls = document.getElementById('mediaControls');
-  if (controls) {
-    if (type === 'none') {
-      controls.classList.add('hidden');
-    } else {
-      controls.classList.remove('hidden');
+    const controls = document.getElementById('mediaControls');
+    if (controls) {
+      if (type === 'none') {
+        controls.classList.add('hidden');
+      } else {
+        controls.classList.remove('hidden');
+      }
     }
-  }
 
-  // Reset file input accept
-  const mediaInput = document.getElementById('mediaInput');
-  if (mediaInput) {
-    mediaInput.value = '';
-    if (type === 'photo') {
-      mediaInput.accept = 'image/*';
-    } else if (type === 'video') {
-      mediaInput.accept = 'video/*';
-    } else {
-      mediaInput.accept = '';
+    const mediaInput = document.getElementById('mediaInput');
+    if (mediaInput) {
+      mediaInput.value = '';
+      if (type === 'photo') mediaInput.accept = 'image/*';
+      else if (type === 'video') mediaInput.accept = 'video/*';
+      else mediaInput.accept = '';
     }
-  }
 
-  // Clear any existing preview when switching types
-  if (type === 'none') {
-    clearMedia();
-  }
+    if (type === 'none') clearMedia();
 
-  log('Media type set to: ' + type);
+    log('Media type: ' + type);
+  } catch (err) {
+    console.error('setMediaType error:', err);
+  }
 };
 
 // ==========================================
 // MEDIA HANDLERS
 // ==========================================
 function setupMediaHandlers() {
-  const mediaInput = document.getElementById('mediaInput');
-  const uploadBtn = document.getElementById('uploadMediaBtn');
+  try {
+    const mediaInput = document.getElementById('mediaInput');
+    const uploadBtn = document.getElementById('uploadMediaBtn');
 
-  if (mediaInput) {
-    mediaInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    if (mediaInput) {
+      mediaInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-      console.log('File selected:', {
-        name: file.name,
-        type: file.type,
-        size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+        const type = currentMediaType;
+        if (type === 'photo' && !file.type.startsWith('image/')) {
+          showErr('Please select a valid image file (JPG, PNG, etc.)');
+          return;
+        }
+        if (type === 'video' && !file.type.startsWith('video/')) {
+          showErr('Please select a valid video file (MP4, MOV, etc.)');
+          return;
+        }
+
+        if (file.size > 100 * 1024 * 1024) {
+          showErr('File too large. Max 100MB.', 'Your file: ' + (file.size/1024/1024).toFixed(1) + 'MB');
+          return;
+        }
+
+        selectedMediaFile = file;
+
+        const fileNameEl = document.getElementById('mediaFileName');
+        if (fileNameEl) {
+          fileNameEl.textContent = 'Selected: ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+        }
+
+        if (uploadBtn) uploadBtn.disabled = false;
+        showMediaPreview(URL.createObjectURL(file), false);
+        log('Media selected: ' + file.name);
       });
-
-      // Validate file type based on selected media type
-      const type = currentMediaType;
-      if (type === 'photo' && !file.type.startsWith('image/')) {
-        showErr('Please select a valid image file (JPG, PNG, etc.)');
-        return;
-      }
-      if (type === 'video' && !file.type.startsWith('video/')) {
-        showErr('Please select a valid video file (MP4, MOV, etc.)');
-        return;
-      }
-
-      // Validate file size (max 100MB)
-      if (file.size > 100 * 1024 * 1024) {
-        showErr('File too large. Maximum size is 100MB.', 'Your file: ' + (file.size/1024/1024).toFixed(1) + 'MB');
-        return;
-      }
-
-      selectedMediaFile = file;
-
-      const fileNameEl = document.getElementById('mediaFileName');
-      if (fileNameEl) {
-        fileNameEl.textContent = 'Selected: ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
-      }
-
-      if (uploadBtn) uploadBtn.disabled = false;
-
-      showMediaPreview(URL.createObjectURL(file), false);
-
-      log('Media selected: ' + file.name);
-    });
+    }
+  } catch (err) {
+    console.error('setupMediaHandlers error:', err);
   }
 }
 
 function showMediaPreview(url, isUploaded) {
-  const placeholder = document.getElementById('mediaPlaceholder');
-  const preview = document.getElementById('mediaPreview');
-  const clearBtn = document.getElementById('clearMediaBtn');
+  try {
+    const placeholder = document.getElementById('mediaPlaceholder');
+    const preview = document.getElementById('mediaPreview');
+    const clearBtn = document.getElementById('clearMediaBtn');
 
-  if (!preview) return;
+    if (!preview) return;
 
-  if (placeholder) placeholder.style.display = 'none';
-  preview.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+    preview.style.display = 'block';
 
-  if (currentMediaType === 'photo') {
-    preview.innerHTML = '<img src="' + url + '" alt="Shipment photo" style="' + (isUploaded ? '' : 'opacity:0.7;') + '" />';
-  } else if (currentMediaType === 'video') {
-    preview.innerHTML = '<video controls style="max-height: 400px; width: 100%;' + (isUploaded ? '' : ' opacity:0.7;') + '"><source src="' + url + '" type="video/mp4">Your browser does not support the video tag.</video>';
+    if (currentMediaType === 'photo') {
+      preview.innerHTML = '<img src="' + url + '" alt="Shipment photo" style="' + (isUploaded ? '' : 'opacity:0.7;') + '" />';
+    } else if (currentMediaType === 'video') {
+      preview.innerHTML = '<video controls style="max-height: 400px; width: 100%;' + (isUploaded ? '' : ' opacity:0.7;') + '"><source src="' + url + '" type="video/mp4">Your browser does not support the video tag.</video>';
+    }
+
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+  } catch (err) {
+    console.error('showMediaPreview error:', err);
   }
-
-  if (clearBtn) clearBtn.style.display = 'inline-flex';
 }
 
 // ==========================================
@@ -221,8 +235,7 @@ window.uploadMedia = async function() {
   const resourceType = currentMediaType === 'photo' ? 'image' : 'video';
   const uploadUrl = 'https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/' + resourceType + '/upload';
 
-  console.log('Starting upload to:', uploadUrl);
-  console.log('Resource type:', resourceType);
+  log('Uploading to: ' + uploadUrl);
 
   try {
     const xhr = new XMLHttpRequest();
@@ -231,13 +244,10 @@ window.uploadMedia = async function() {
       if (e.lengthComputable && progressFill) {
         const percent = Math.round((e.loaded / e.total) * 100);
         progressFill.style.width = percent + '%';
-        console.log('Upload progress: ' + percent + '%');
       }
     });
 
     xhr.addEventListener('load', () => {
-      console.log('Upload complete. Status:', xhr.status);
-
       if (xhr.status === 200) {
         try {
           const response = JSON.parse(xhr.responseText);
@@ -256,56 +266,41 @@ window.uploadMedia = async function() {
               fileNameEl.innerHTML = '✅ ' + typeLabel + ' uploaded! <a href="' + mediaUrl + '" target="_blank" style="color: #3498db; font-size: 12px;">View ' + typeLabel + '</a>';
             }
 
-            showOk(typeLabel + ' uploaded successfully!');
-            log(typeLabel + ' uploaded: ' + mediaUrl);
+            showOk(typeLabel + ' uploaded!');
+            log('Uploaded: ' + mediaUrl);
 
             setTimeout(() => {
               if (progressBar) progressBar.classList.remove('show');
               if (progressFill) progressFill.style.width = '0%';
             }, 1000);
           } else {
-            showErr('Upload failed: No URL in response', JSON.stringify(response));
+            showErr('Upload failed: No URL', JSON.stringify(response));
             if (uploadBtn) uploadBtn.disabled = false;
           }
         } catch (parseErr) {
-          showErr('Failed to parse upload response', xhr.responseText.substring(0, 100));
+          showErr('Parse error', xhr.responseText.substring(0, 100));
           if (uploadBtn) uploadBtn.disabled = false;
         }
       } else {
         let errorMsg = 'Upload failed';
         let errorDetails = 'Status: ' + xhr.status;
-
         try {
-          const errorResponse = JSON.parse(xhr.responseText);
-          errorMsg = errorResponse.error?.message || errorMsg;
-          errorDetails = 'Code: ' + (errorResponse.error?.code || 'unknown');
-          console.error('Cloudinary error:', errorResponse);
-        } catch (e) {
-          errorDetails = 'Status ' + xhr.status + ': ' + xhr.statusText;
-        }
-
+          const err = JSON.parse(xhr.responseText);
+          errorMsg = err.error?.message || errorMsg;
+        } catch (e) {}
         showErr(errorMsg, errorDetails);
         if (uploadBtn) uploadBtn.disabled = false;
       }
     });
 
-    xhr.addEventListener('error', (e) => {
-      console.error('Network error:', e);
-      showErr(
-        'Network error - Cannot connect to Cloudinary',
-        'Check: 1) Internet connection, 2) Upload preset exists and is UNSIGNED, 3) Cloud name is correct'
-      );
+    xhr.addEventListener('error', () => {
+      showErr('Network error - Cannot connect to Cloudinary');
       if (uploadBtn) uploadBtn.disabled = false;
       if (progressBar) progressBar.classList.remove('show');
     });
 
     xhr.addEventListener('abort', () => {
-      showErr('Upload was cancelled');
-      if (uploadBtn) uploadBtn.disabled = false;
-    });
-
-    xhr.addEventListener('timeout', () => {
-      showErr('Upload timed out. File may be too large or connection too slow.');
+      showErr('Upload cancelled');
       if (uploadBtn) uploadBtn.disabled = false;
     });
 
@@ -313,7 +308,6 @@ window.uploadMedia = async function() {
     xhr.send(formData);
 
   } catch (err) {
-    console.error('Upload exception:', err);
     showErr('Upload error: ' + err.message);
     if (uploadBtn) uploadBtn.disabled = false;
   }
@@ -334,13 +328,8 @@ window.clearMedia = function() {
   if (fileNameEl) fileNameEl.textContent = '';
   if (uploadBtn) uploadBtn.disabled = true;
   if (clearBtn) clearBtn.style.display = 'none';
-
-  if (preview) {
-    preview.innerHTML = '';
-    preview.style.display = 'none';
-  }
+  if (preview) { preview.innerHTML = ''; preview.style.display = 'none'; }
   if (placeholder) placeholder.style.display = 'block';
-
   if (mediaInput) mediaInput.value = '';
 
   log('Media cleared');
@@ -350,45 +339,74 @@ window.clearMedia = function() {
 // LOAD SHIPMENTS
 // ==========================================
 function loadShipments() {
-  const q = query(collection(db, 'shipments'), orderBy('createdAt', 'desc'));
+  try {
+    log('Loading shipments...');
 
-  onSnapshot(q, (snapshot) => {
-    shipments = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-    log('Loaded ' + shipments.length + ' shipments');
-    renderTable();
-  }, (err) => {
-    showErr('Firebase error: ' + err.message);
-    log('Firebase error: ' + err.message, 'error');
-  });
+    if (!db || !collection || !query || !orderBy || !onSnapshot) {
+      console.error('Firebase imports missing:', {db: !!db, collection: !!collection, query: !!query, orderBy: !!orderBy, onSnapshot: !!onSnapshot});
+      const tbody = document.getElementById('shipmentTable');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Firebase not loaded properly. Check console.</td></tr>';
+      }
+      return;
+    }
+
+    const q = query(collection(db, 'shipments'), orderBy('createdAt', 'desc'));
+
+    onSnapshot(q, (snapshot) => {
+      shipments = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+      log('Loaded ' + shipments.length + ' shipments');
+      renderTable();
+    }, (err) => {
+      showErr('Firebase error: ' + err.message);
+      console.error('Firebase error:', err);
+
+      const tbody = document.getElementById('shipmentTable');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Error loading shipments: ' + err.message + '</td></tr>';
+      }
+    });
+  } catch (err) {
+    console.error('loadShipments error:', err);
+    showErr('Failed to load shipments: ' + err.message);
+    const tbody = document.getElementById('shipmentTable');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ ' + err.message + '</td></tr>';
+    }
+  }
 }
 
 // ==========================================
 // RENDER TABLE
 // ==========================================
 function renderTable() {
-  const tbody = document.getElementById('shipmentTable');
-  if (!tbody) return;
+  try {
+    const tbody = document.getElementById('shipmentTable');
+    if (!tbody) return;
 
-  if (!shipments.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#7f8c8d;">No shipments yet. Create one above!</td></tr>';
-    return;
+    if (!shipments.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#7f8c8d;">No shipments yet. Create one above!</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = shipments.map(s => {
+      const hasMedia = s.mediaUrl && s.mediaUrl.trim() !== '';
+      const legacyVideo = s.videoUrl && s.videoUrl.trim() !== '';
+      const mediaLabel = s.mediaType === 'photo' ? '📷 View' : '📹 View';
+      const mediaLink = hasMedia ? s.mediaUrl : (legacyVideo ? s.videoUrl : '');
+
+      return '<tr>' +
+        '<td style="font-family: monospace; font-weight: 600;">' + (s.trackingNumber || 'N/A') + '</td>' +
+        '<td>' + (s.recipient || 'N/A') + '</td>' +
+        '<td><span style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; background:' + getStatusColor(s.status) + '; color:white;">' + (s.status || '-') + '</span></td>' +
+        '<td>' + (s.lastUpdate || '-') + '</td>' +
+        '<td>' + (mediaLink ? '<a href="' + mediaLink + '" target="_blank" class="video-link">' + mediaLabel + '</a>' : '-') + '</td>' +
+        '<td><div class="table-actions"><button class="btn-edit" onclick="editShipment('' + s.trackingNumber + '')">Edit</button><button class="btn-delete-table" onclick="removeShipment('' + s.trackingNumber + '')">Delete</button></div></td>' +
+      '</tr>';
+    }).join('');
+  } catch (err) {
+    console.error('renderTable error:', err);
   }
-
-  tbody.innerHTML = shipments.map(s => {
-    const hasMedia = s.mediaUrl && s.mediaUrl.trim() !== '';
-    const legacyVideo = s.videoUrl && s.videoUrl.trim() !== '';
-    const mediaLabel = s.mediaType === 'photo' ? '📷 View' : '📹 View';
-    const mediaLink = hasMedia ? s.mediaUrl : (legacyVideo ? s.videoUrl : '');
-
-    return '<tr>' +
-      '<td style="font-family: monospace; font-weight: 600;">' + (s.trackingNumber || 'N/A') + '</td>' +
-      '<td>' + (s.recipient || 'N/A') + '</td>' +
-      '<td><span style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; background:' + getStatusColor(s.status) + '; color:white;">' + (s.status || '-') + '</span></td>' +
-      '<td>' + (s.lastUpdate || '-') + '</td>' +
-      '<td>' + (mediaLink ? '<a href="' + mediaLink + '" target="_blank" class="video-link">' + mediaLabel + '</a>' : '-') + '</td>' +
-      '<td><div class="table-actions"><button class="btn-edit" onclick="editShipment('' + s.trackingNumber + '')">Edit</button><button class="btn-delete-table" onclick="removeShipment('' + s.trackingNumber + '')">Delete</button></div></td>' +
-    '</tr>';
-  }).join('');
 }
 
 function getStatusColor(status) {
@@ -404,40 +422,40 @@ function getStatusColor(status) {
 // SAVE SHIPMENT
 // ==========================================
 window.saveShipment = async function() {
-  const recipientEl = document.getElementById("recipient");
-
-  if (!recipientEl || !recipientEl.value.trim()) {
-    showErr('Please enter a receiver name');
-    if (recipientEl) recipientEl.focus();
-    return;
-  }
-
-  const mediaType = document.getElementById('mediaType')?.value || 'none';
-  const mediaUrl = document.getElementById('mediaUrl')?.value?.trim() || '';
-
-  const data = {
-    trackingNumber: document.getElementById("tracking").value.toUpperCase().trim(),
-    sender: document.getElementById("sender")?.value?.trim() || '',
-    recipient: recipientEl.value.trim(),
-    origin: document.getElementById("origin")?.value?.trim() || '',
-    destination: document.getElementById("destination")?.value?.trim() || '',
-    weight: document.getElementById("weight")?.value?.trim() || '',
-    status: document.getElementById("status")?.value?.trim() || 'Package Received',
-    lastUpdate: document.getElementById("lastUpdate")?.value?.trim() || new Date().toLocaleString(),
-    estDelivery: document.getElementById("estDelivery")?.value?.trim() || '',
-    mediaType: mediaType,
-    mediaUrl: mediaUrl,
-    updatedAt: new Date().toISOString()
-  };
-
-  const exists = shipments.find(s => 
-    s.trackingNumber && s.trackingNumber.toUpperCase() === data.trackingNumber.toUpperCase()
-  );
-
   try {
+    const recipientEl = document.getElementById("recipient");
+
+    if (!recipientEl || !recipientEl.value.trim()) {
+      showErr('Please enter a receiver name');
+      if (recipientEl) recipientEl.focus();
+      return;
+    }
+
+    const mediaType = document.getElementById('mediaType')?.value || 'none';
+    const mediaUrl = document.getElementById('mediaUrl')?.value?.trim() || '';
+
+    const data = {
+      trackingNumber: document.getElementById("tracking").value.toUpperCase().trim(),
+      sender: document.getElementById("sender")?.value?.trim() || '',
+      recipient: recipientEl.value.trim(),
+      origin: document.getElementById("origin")?.value?.trim() || '',
+      destination: document.getElementById("destination")?.value?.trim() || '',
+      weight: document.getElementById("weight")?.value?.trim() || '',
+      status: document.getElementById("status")?.value?.trim() || 'Package Received',
+      lastUpdate: document.getElementById("lastUpdate")?.value?.trim() || new Date().toLocaleString(),
+      estDelivery: document.getElementById("estDelivery")?.value?.trim() || '',
+      mediaType: mediaType,
+      mediaUrl: mediaUrl,
+      updatedAt: new Date().toISOString()
+    };
+
+    const exists = shipments.find(s => 
+      s.trackingNumber && s.trackingNumber.toUpperCase() === data.trackingNumber.toUpperCase()
+    );
+
     if (exists) {
       await shipmentService.update(data.trackingNumber, data);
-      showOk('Shipment updated successfully!');
+      showOk('Shipment updated!');
     } else {
       data.createdAt = new Date().toISOString();
       await shipmentService.create(data);
@@ -470,75 +488,79 @@ window.removeShipment = async function(tn) {
 // EDIT SHIPMENT
 // ==========================================
 window.editShipment = function(tn) {
-  const s = shipments.find(x => x.trackingNumber === tn);
-  if (!s) {
-    showErr('Shipment not found: ' + tn);
-    return;
-  }
-
-  document.getElementById("tracking").value = s.trackingNumber;
-  const display = document.getElementById("trackingDisplay");
-  if (display) display.textContent = s.trackingNumber;
-
-  document.getElementById("sender").value = s.sender || '';
-  document.getElementById("recipient").value = s.recipient || '';
-  document.getElementById("origin").value = s.origin || '';
-  document.getElementById("destination").value = s.destination || '';
-  document.getElementById("weight").value = s.weight || '';
-  document.getElementById("status").value = s.status || '';
-  document.getElementById("lastUpdate").value = s.lastUpdate || '';
-  document.getElementById("estDelivery").value = s.estDelivery || '';
-
-  const mediaTypeEl = document.getElementById("mediaType");
-  const mediaUrlEl = document.getElementById("mediaUrl");
-  const fileNameEl = document.getElementById("mediaFileName");
-
-  // Set media type
-  const savedType = s.mediaType || (s.videoUrl ? 'video' : 'none');
-  setMediaType(savedType);
-
-  if (s.mediaUrl && s.mediaUrl.trim()) {
-    if (mediaUrlEl) mediaUrlEl.value = s.mediaUrl;
-    showMediaPreview(s.mediaUrl, true);
-    if (fileNameEl) {
-      const typeLabel = savedType === 'photo' ? 'Photo' : 'Video';
-      fileNameEl.innerHTML = 'Current: <a href="' + s.mediaUrl + '" target="_blank" style="color: #3498db;">View ' + typeLabel + '</a>';
+  try {
+    const s = shipments.find(x => x.trackingNumber === tn);
+    if (!s) {
+      showErr('Shipment not found: ' + tn);
+      return;
     }
-  } else if (s.videoUrl && s.videoUrl.trim()) {
-    // Legacy support: old shipments with videoUrl
-    if (mediaUrlEl) mediaUrlEl.value = s.videoUrl;
-    setMediaType('video');
-    showMediaPreview(s.videoUrl, true);
-    if (fileNameEl) {
-      fileNameEl.innerHTML = 'Current: <a href="' + s.videoUrl + '" target="_blank" style="color: #3498db;">View Video</a>';
+
+    document.getElementById("tracking").value = s.trackingNumber;
+    const display = document.getElementById("trackingDisplay");
+    if (display) display.textContent = s.trackingNumber;
+
+    document.getElementById("sender").value = s.sender || '';
+    document.getElementById("recipient").value = s.recipient || '';
+    document.getElementById("origin").value = s.origin || '';
+    document.getElementById("destination").value = s.destination || '';
+    document.getElementById("weight").value = s.weight || '';
+    document.getElementById("status").value = s.status || '';
+    document.getElementById("lastUpdate").value = s.lastUpdate || '';
+    document.getElementById("estDelivery").value = s.estDelivery || '';
+
+    const mediaUrlEl = document.getElementById("mediaUrl");
+    const fileNameEl = document.getElementById("mediaFileName");
+
+    const savedType = s.mediaType || (s.videoUrl ? 'video' : 'none');
+    setMediaType(savedType);
+
+    if (s.mediaUrl && s.mediaUrl.trim()) {
+      if (mediaUrlEl) mediaUrlEl.value = s.mediaUrl;
+      showMediaPreview(s.mediaUrl, true);
+      if (fileNameEl) {
+        const typeLabel = savedType === 'photo' ? 'Photo' : 'Video';
+        fileNameEl.innerHTML = 'Current: <a href="' + s.mediaUrl + '" target="_blank" style="color: #3498db;">View ' + typeLabel + '</a>';
+      }
+    } else if (s.videoUrl && s.videoUrl.trim()) {
+      if (mediaUrlEl) mediaUrlEl.value = s.videoUrl;
+      setMediaType('video');
+      showMediaPreview(s.videoUrl, true);
+      if (fileNameEl) {
+        fileNameEl.innerHTML = 'Current: <a href="' + s.videoUrl + '" target="_blank" style="color: #3498db;">View Video</a>';
+      }
+    } else {
+      clearMedia();
     }
-  } else {
-    clearMedia();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showOk('Editing: ' + tn);
+
+  } catch (err) {
+    console.error('editShipment error:', err);
+    showErr('Error loading shipment: ' + err.message);
   }
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  showOk('Editing shipment: ' + tn);
-  log('Loaded for edit: ' + tn);
 };
 
 // ==========================================
 // RESET FORM
 // ==========================================
 window.resetForm = function() {
-  generateNewTracking();
+  try {
+    generateNewTracking();
 
-  ["sender", "recipient", "origin", "destination", "weight", "lastUpdate", "estDelivery"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
+    ["sender", "recipient", "origin", "destination", "weight", "lastUpdate", "estDelivery"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
 
-  const statusEl = document.getElementById("status");
-  if (statusEl) statusEl.value = '';
+    const statusEl = document.getElementById("status");
+    if (statusEl) statusEl.value = '';
 
-  setMediaType('none');
-  clearMedia();
+    setMediaType('none');
+    clearMedia();
 
-  showOk('Form reset - Ready for new shipment');
-  log('Form reset');
+    showOk('Form reset');
+  } catch (err) {
+    console.error('resetForm error:', err);
+  }
 };

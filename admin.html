@@ -887,6 +887,24 @@
 </style>
 </head>
 <body>
+<div id="scriptStatus" style="position:fixed; top:5px; right:5px; background:#333; color:#fff; padding:5px 10px; border-radius:4px; font-size:11px; z-index:99999;">⏳ Loading...</div>
+<script>
+window.addEventListener('load', function() {
+  var status = document.getElementById('scriptStatus');
+  if (status) {
+    setTimeout(function() {
+      var tracking = document.getElementById('trackingDisplay');
+      if (tracking && tracking.textContent !== 'Generating...') {
+        status.textContent = '✅ Ready';
+        status.style.background = '#27ae60';
+      } else {
+        status.textContent = '❌ Error - Check Console';
+        status.style.background = '#e74c3c';
+      }
+    }, 2000);
+  }
+});
+</script>
 
 <!-- Pattern Lock Overlay -->
 <div class="pattern-overlay" id="patternOverlay">
@@ -1194,7 +1212,7 @@
           <th>Receiver</th>
           <th>Status</th>
           <th>Last Update</th>
-          <th>Video</th>
+          <th>Media</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -1212,6 +1230,23 @@
 
 <script type="module" src="firebase.js"></script>
 <script type="module" src="adminscript.js"></script>
+<script>
+// Fallback: if module fails, show error after 3 seconds
+setTimeout(function() {
+  var trackingDisplay = document.getElementById('trackingDisplay');
+  var shipmentTable = document.getElementById('shipmentTable');
+
+  if (trackingDisplay && trackingDisplay.textContent === 'Generating...') {
+    trackingDisplay.textContent = 'EC-LOAD-ERROR';
+    console.error('Tracking number failed to generate - adminscript.js may not have loaded');
+  }
+
+  if (shipmentTable && shipmentTable.innerHTML.includes('Loading shipments')) {
+    shipmentTable.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#e74c3c;">❌ Failed to load shipments. Check browser console (F12) for errors.<br><small>Common causes: Firebase config issue, ad blocker, or script not deployed.</small></td></tr>';
+    console.error('Shipments failed to load - check firebase connection and adminscript.js');
+  }
+}, 4000);
+</script>
 
 <!-- Pattern Lock JavaScript -->
 <script type="module">
@@ -1701,5 +1736,19 @@
   window.confirmNewPattern = window.confirmNewPattern;
 </script>
 
+
+<!-- Module load error fallback -->
+<script>
+window.onerror = function(msg, url, line) {
+  console.error('JS Error:', msg, 'at', url, 'line', line);
+  var box = document.getElementById('errorBox');
+  if (box) { box.textContent = '❌ ' + msg; box.style.display = 'block'; }
+};
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('Unhandled promise rejection:', e.reason);
+  var box = document.getElementById('errorBox');
+  if (box) { box.textContent = '❌ ' + (e.reason?.message || e.reason); box.style.display = 'block'; }
+});
+</script>
 </body>
 </html>
