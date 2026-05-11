@@ -61,8 +61,10 @@ async function loadShipment() {
 // RENDER TRACKING PAGE (NEW DESIGN)
 // ===============================
 function renderTrackingPage(shipment) {
-  const videoUrl = shipment.videoUrl;
-  const hasMedia = videoUrl && typeof videoUrl === 'string' && videoUrl.trim() !== "" && videoUrl.startsWith('http');
+  // Support both new mediaType/mediaUrl fields and legacy videoUrl
+  const mediaUrl = (shipment.mediaUrl || shipment.videoUrl || '').trim();
+  const mediaType = shipment.mediaType || (shipment.videoUrl ? 'video' : 'none');
+  const hasMedia = mediaUrl && mediaUrl.startsWith('http');
   
   // Determine status class
   let statusClass = '';
@@ -76,21 +78,30 @@ function renderTrackingPage(shipment) {
   // Build journey timeline (mock data based on status, or use route if available)
   const journeyHTML = buildJourneyHTML(shipment);
   
-  // Build media section (centered)
-  const mediaHTML = hasMedia ? `
+  // Build media section — supports photo, video, or legacy videoUrl
+  let mediaHTML = '';
+  if (hasMedia) {
+    const isPhoto = mediaType === 'photo';
+    const label = isPhoto ? 'Photo' : 'Video';
+    const icon = isPhoto ? '📷' : '📹';
+    mediaHTML = `
     <div class="media-section">
       <div class="media-title">
-        <span>📹</span>
-        <span>Shipment Video</span>
+        <span>${icon}</span>
+        <span>Shipment ${label}</span>
       </div>
       <div class="media-container">
-        <video controls poster="https://via.placeholder.com/600x400/0a2a66/ffffff?text=Shipment+Video">
-          <source src="${videoUrl}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+        ${isPhoto
+          ? `<img src="${mediaUrl}" alt="Shipment photo" style="width:100%; max-height:400px; object-fit:cover; display:block;" />`
+          : `<video controls poster="https://via.placeholder.com/600x400/0a2a66/ffffff?text=Shipment+Video">
+               <source src="${mediaUrl}" type="video/mp4">
+               Your browser does not support the video tag.
+             </video>`
+        }
       </div>
     </div>
-  ` : '';
+    `;
+  }
   
   trackingContainer.innerHTML = `
     <!-- Tracking Number Header -->
