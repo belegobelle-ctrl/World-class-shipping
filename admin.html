@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <title>worldclassshipping | Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="stylesheet" href="admin.css">
-
   <style>
     * {
       margin: 0;
@@ -20,17 +18,342 @@
       color: #2c3e50;
     }
 
-    /* ===== ADMIN SECTION ===== */
+    /* ===== PATTERN LOCK CSS ===== */
+    .pattern-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a2a66 0%, #1e3a8a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
 
-    .admin-section {
-      max-width: 900px;
-      margin: 30px auto;
-      padding: 0 20px;
+    .pattern-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .pattern-container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .pattern-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0a2a66;
+      margin-bottom: 10px;
+    }
+
+    .pattern-subtitle {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 20px;
+    }
+
+    .pattern-status {
+      font-size: 16px;
+      font-weight: 700;
+      height: 24px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+
+    .pattern-status.error {
+      color: #e74c3c;
+    }
+
+    .pattern-status.success {
+      color: #27ae60;
+    }
+
+    .pattern-status.failed {
+      color: #e74c3c;
+      font-size: 18px;
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 240px;
+      height: 240px;
+      margin: 0 auto 25px;
+      position: relative;
+    }
+
+    .pattern-dot {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      border: 3px solid #bdc3c7;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .pattern-dot:hover {
+      background: #d0d0d0;
+      transform: scale(1.05);
+    }
+
+    .pattern-dot.active {
+      background: #3498db;
+      border-color: #2980b9;
+      transform: scale(1.1);
+    }
+
+    .pattern-dot.correct {
+      background: #27ae60;
+      border-color: #229954;
+    }
+
+    .pattern-dot.wrong {
+      background: #e74c3c;
+      border-color: #c0392b;
+      animation: shake 0.5s;
+    }
+
+    .pattern-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .pattern-line {
+      stroke: #3498db;
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .pattern-line.show {
+      opacity: 1;
+    }
+
+    .pattern-line.correct {
+      stroke: #27ae60;
+    }
+
+    .pattern-line.wrong {
+      stroke: #e74c3c;
+    }
+
+    .pattern-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .pattern-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .pattern-btn-primary {
+      background: #0a2a66;
+      color: white;
+    }
+
+    .pattern-btn-primary:hover {
+      background: #004080;
+    }
+
+    .pattern-btn-secondary {
+      background: #f0f0f0;
+      color: #2c3e50;
+    }
+
+    .pattern-btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .pattern-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pattern-forgot {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #7f8c8d;
+    }
+
+    .pattern-forgot a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .pattern-forgot a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== CHANGE PASSWORD MODAL ===== */
+    .change-password-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 10001;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .change-password-modal.show {
+      display: flex;
+    }
+
+    .change-password-box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .change-password-box h3 {
+      color: #0a2a66;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e0e0e0;
+    }
+
+    .step-dot.active {
+      background: #0a2a66;
+    }
+
+    .step-dot.completed {
+      background: #27ae60;
+    }
+
+    .password-step {
+      display: none;
+    }
+
+    .password-step.active {
       display: block;
     }
 
-    /* ===== NAVBAR ===== */
+    .step-instruction {
+      margin-bottom: 15px;
+      color: #666;
+      font-size: 14px;
+    }
 
+    .step-instruction strong {
+      color: #0a2a66;
+    }
+
+    .step-status {
+      font-size: 14px;
+      font-weight: 600;
+      height: 20px;
+      margin-bottom: 15px;
+    }
+
+    .step-status.error {
+      color: #e74c3c;
+    }
+
+    .step-status.success {
+      color: #27ae60;
+    }
+
+    /* Pattern grid inside modal */
+    .modal-pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .modal-pattern-grid .pattern-dot {
+      width: 50px;
+      height: 50px;
+    }
+
+    .modal-pattern-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .modal-pattern-line {
+      stroke: #3498db;
+      stroke-width: 3;
+      stroke-linecap: round;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .modal-pattern-line.show {
+      opacity: 1;
+    }
+
+    /* ===== EXISTING ADMIN CSS ===== */
     .navbar {
       background: #0a2a66;
       color: white;
@@ -68,7 +391,16 @@
       font-weight: bold;
     }
 
-    /* ===== STATUS BOXES ===== */
+    .admin-section {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+      display: none;
+    }
+
+    .admin-section.visible {
+      display: block;
+    }
 
     #errorBox {
       display: none;
@@ -90,8 +422,6 @@
       font-weight: 500;
     }
 
-    /* ===== CARDS ===== */
-
     .card {
       background: white;
       border-radius: 12px;
@@ -109,8 +439,6 @@
       align-items: center;
       gap: 10px;
     }
-
-    /* ===== TRACKING DISPLAY ===== */
 
     .tracking-display {
       background: linear-gradient(135deg, #0a2a66, #004080);
@@ -136,14 +464,12 @@
       font-family: 'Courier New', monospace;
     }
 
-    /* ===== MEDIA SECTION ===== */
-
-    .media-section {
+    .video-section {
       text-align: center;
       margin-bottom: 25px;
     }
 
-    .media-title {
+    .video-title {
       font-size: 18px;
       font-weight: 600;
       color: #2c3e50;
@@ -154,92 +480,46 @@
       gap: 8px;
     }
 
-    .media-type-selector {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
-    .media-type-btn {
-      padding: 12px 24px;
-      border: 2px solid #e0e0e0;
-      background: white;
-      border-radius: 25px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      color: #555;
-      transition: all 0.3s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .media-type-btn:hover {
-      border-color: #0a2a66;
-      color: #0a2a66;
-    }
-
-    .media-type-btn.active {
-      background: #0a2a66;
-      border-color: #0a2a66;
-      color: white;
-    }
-
-    .media-preview-wrap {
+    .video-container {
       position: relative;
       width: 100%;
       max-width: 600px;
       margin: 0 auto 20px auto;
       border-radius: 12px;
       overflow: hidden;
-      background: #f8f9fa;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      background: #000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       min-height: 200px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .media-placeholder {
+    .video-container video {
+      width: 100%;
+      height: auto;
+      max-height: 400px;
+      display: block;
+    }
+
+    .video-placeholder {
       color: #7f8c8d;
       font-size: 14px;
       padding: 40px;
-      text-align: center;
     }
 
-    .media-placeholder-icon {
+    .video-placeholder-icon {
       font-size: 48px;
       margin-bottom: 10px;
     }
 
-    .media-preview {
-      display: none;
-      width: 100%;
-    }
-
-    .media-preview img,
-    .media-preview video {
-      width: 100%;
-      max-height: 400px;
-      object-fit: contain;
-      display: block;
-    }
-
-    .media-controls {
+    .video-controls {
       display: flex;
       gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
+      margin-top: 15px;
     }
-
-    .media-controls.hidden {
-      display: none;
-    }
-
-    /* ===== UPLOAD BUTTONS ===== */
 
     .upload-btn {
       background: #27ae60;
@@ -284,8 +564,6 @@
       word-break: break-all;
     }
 
-    /* ===== PROGRESS BAR ===== */
-
     .progress-bar {
       width: 100%;
       max-width: 600px;
@@ -307,8 +585,6 @@
       width: 0%;
       transition: width 0.3s ease;
     }
-
-    /* ===== FORM ===== */
 
     .form-grid {
       display: grid;
@@ -355,8 +631,6 @@
       font-family: 'Courier New', monospace;
     }
 
-    /* ===== ACTION BAR ===== */
-
     .action-bar {
       display: flex;
       gap: 15px;
@@ -401,8 +675,6 @@
       color: white;
     }
 
-    /* ===== TABLE ===== */
-
     .table-card {
       overflow-x: auto;
     }
@@ -413,8 +685,7 @@
       font-size: 14px;
     }
 
-    th,
-    td {
+    th, td {
       padding: 12px;
       text-align: left;
       border-bottom: 1px solid #e0e0e0;
@@ -476,116 +747,6 @@
       text-decoration: underline;
     }
 
-    .loading-row {
-      text-align: center;
-      padding: 40px;
-      color: #7f8c8d;
-    }
-
-    /* ===== DEBUG PANEL ===== */
-
-    #debugPanel {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: #1a1a2e;
-      color: #00ff88;
-      padding: 15px;
-      border-radius: 8px;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      max-width: 450px;
-      max-height: 350px;
-      overflow-y: auto;
-      z-index: 99999;
-      border: 1px solid #333;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    }
-
-    #debugPanel.hidden {
-      display: none !important;
-    }
-
-    #debugPanel .debug-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      border-bottom: 1px solid #333;
-      padding-bottom: 5px;
-      position: sticky;
-      top: 0;
-      background: #1a1a2e;
-    }
-
-    #debugPanel .debug-title {
-      font-weight: bold;
-      color: #fff;
-      font-size: 13px;
-    }
-
-    #debugPanel .debug-close {
-      cursor: pointer;
-      color: #ff5555;
-      font-weight: bold;
-      padding: 0 5px;
-    }
-
-    #debugPanel .debug-log {
-      margin: 3px 0;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-
-    #debugPanel .debug-error {
-      color: #ff5555;
-    }
-
-    #debugPanel .debug-warn {
-      color: #ffaa00;
-    }
-
-    #debugPanel .debug-info {
-      color: #00ff88;
-    }
-
-    #debugToggle {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: #0a2a66;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 12px;
-      z-index: 99998;
-      font-family: 'Courier New', monospace;
-      font-weight: 600;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      transition: all 0.3s;
-    }
-
-    #debugToggle:hover {
-      background: #004080;
-      transform: translateY(-2px);
-    }
-
-    /* ===== SPINNER ===== */
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* ===== MOBILE ===== */
-
     @media (max-width: 768px) {
       .navbar {
         padding: 15px 20px;
@@ -611,628 +772,1032 @@
         flex-direction: column;
       }
 
-      .btn-primary,
-      .btn-secondary {
+      .btn-primary, .btn-secondary {
         width: 100%;
       }
-
-      .navbar nav {
-        gap: 4px;
-      }
-
-      .navbar a {
-        padding: 8px 10px;
-        font-size: 13px;
-      }
     }
-  </style>
-</head>
 
+    .loading-row {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    /* ===== MEDIA SECTION STYLES ===== */
+    .media-section {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .media-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .media-type-selector {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .media-type-btn {
+      padding: 12px 24px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .media-type-btn:hover {
+      border-color: #0a2a66;
+      color: #0a2a66;
+    }
+    .media-type-btn.active {
+      background: #0a2a66;
+      border-color: #0a2a66;
+      color: white;
+    }
+    .media-preview-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f8f9fa;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .media-placeholder {
+      color: #7f8c8d;
+      font-size: 14px;
+      padding: 40px;
+      text-align: center;
+    }
+    .media-placeholder-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .media-preview {
+      display: none;
+      width: 100%;
+    }
+    .media-preview img,
+    .media-preview video {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      display: block;
+    }
+    .media-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .media-controls.hidden {
+      display: none;
+    }
+
+    /* ===== DEBUG PANEL ===== */
+    #debugPanel {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #1a1a2e;
+      color: #00ff88;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-width: 450px;
+      max-height: 350px;
+      overflow-y: auto;
+      z-index: 99999;
+      border: 1px solid #333;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    #debugPanel.hidden {
+      display: none !important;
+    }
+    #debugPanel .debug-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+      position: sticky;
+      top: 0;
+      background: #1a1a2e;
+    }
+    #debugPanel .debug-title {
+      font-weight: bold;
+      color: #fff;
+      font-size: 13px;
+    }
+    #debugPanel .debug-close {
+      cursor: pointer;
+      color: #ff5555;
+      font-weight: bold;
+      padding: 0 5px;
+    }
+    #debugPanel .debug-log {
+      margin: 3px 0;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    #debugPanel .debug-error {
+      color: #ff5555;
+    }
+    #debugPanel .debug-warn {
+      color: #ffaa00;
+    }
+    #debugPanel .debug-info {
+      color: #00ff88;
+    }
+    #debugToggle {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #0a2a66;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      z-index: 99998;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      transition: all 0.3s;
+    }
+    #debugToggle:hover {
+      background: #004080;
+      transform: translateY(-2px);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+</style>
+</head>
 <body>
 
-  <!-- Debug Toggle Button -->
-  <button id="debugToggle" onclick="toggleDebug()">🐛 Debug</button>
+<!-- Debug Toggle Button -->
+<button id="debugToggle" onclick="toggleDebug()">🐛 Debug</button>
 
-  <!-- Debug Panel -->
-  <div id="debugPanel" class="hidden">
+<!-- Debug Panel -->
+<div id="debugPanel" class="hidden">
+  <div class="debug-header">
+    <span class="debug-title">🔧 Debug Console</span>
+    <span class="debug-close" onclick="toggleDebug()">✕</span>
+  </div>
+  <div id="debugContent"></div>
+</div>
 
-    <div class="debug-header">
-      <span class="debug-title">🔧 Debug Console</span>
-      <span class="debug-close" onclick="toggleDebug()">✕</span>
+<script>
+  // Debug panel toggle - must be global and available immediately
+  window.toggleDebug = function() {
+    const panel = document.getElementById('debugPanel');
+    const btn = document.getElementById('debugToggle');
+    if (panel.classList.contains('hidden')) {
+      panel.classList.remove('hidden');
+      btn.style.display = 'none';
+    } else {
+      panel.classList.add('hidden');
+      btn.style.display = 'block';
+    }
+  };
+
+  // Early debug logging before modules load
+  console.log('[DEBUG] HTML parsed, inline script running');
+  const debugContent = document.getElementById('debugContent');
+  if (debugContent) {
+    const div = document.createElement('div');
+    div.className = 'debug-log debug-info';
+    div.textContent = '[HTML] Page loaded, waiting for pattern unlock...';
+    debugContent.appendChild(div);
+  }
+</script>
+
+<!-- Pattern Lock Overlay -->
+<div class="pattern-overlay" id="patternOverlay">
+  <div class="pattern-container">
+    <div class="pattern-title">🔒 Admin Access</div>
+    <div class="pattern-subtitle">Draw pattern to unlock</div>
+
+    <div class="pattern-status" id="patternStatus"></div>
+
+    <div class="pattern-grid" id="patternGrid">
+      <svg class="pattern-canvas" id="patternCanvas">
+        <line class="pattern-line" id="line1" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line2" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line3" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line4" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line5" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line6" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line7" x1="0" y1="0" x2="0" y2="0"/>
+        <line class="pattern-line" id="line8" x1="0" y1="0" x2="0" y2="0"/>
+      </svg>
+
+      <div class="pattern-dot" data-index="1"></div>
+      <div class="pattern-dot" data-index="2"></div>
+      <div class="pattern-dot" data-index="3"></div>
+      <div class="pattern-dot" data-index="4"></div>
+      <div class="pattern-dot" data-index="5"></div>
+      <div class="pattern-dot" data-index="6"></div>
+      <div class="pattern-dot" data-index="7"></div>
+      <div class="pattern-dot" data-index="8"></div>
+      <div class="pattern-dot" data-index="9"></div>
     </div>
 
-    <div id="debugContent"></div>
+    <div class="pattern-actions">
+      <button class="pattern-btn pattern-btn-secondary" onclick="clearPattern()">Clear</button>
+      <button class="pattern-btn pattern-btn-primary" id="confirmBtn" onclick="confirmPattern()" disabled>Unlock</button>
+    </div>
 
+    <div class="pattern-forgot">
+      <a href="#" onclick="showChangePassword(event)">Forgot password? Change pattern</a>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="change-password-modal" id="changePasswordModal">
+  <div class="change-password-box">
+    <h3>🔐 Change Pattern</h3>
+
+    <div class="step-indicator">
+      <div class="step-dot active" id="step1"></div>
+      <div class="step-dot" id="step2"></div>
+      <div class="step-dot" id="step3"></div>
+    </div>
+
+    <!-- Step 1: Enter Old Pattern -->
+    <div class="password-step active" id="passwordStep1">
+      <div class="step-instruction">Enter your <strong>current</strong> pattern</div>
+      <div class="step-status" id="step1Status"></div>
+
+      <div class="modal-pattern-grid" id="modalGrid1">
+        <svg class="modal-pattern-canvas" id="modalCanvas1">
+          <line class="modal-pattern-line" id="m1line1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line2" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line3" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line4" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line5" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line6" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line7" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m1line8" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="pattern-dot" data-step="1" data-index="1"></div>
+        <div class="pattern-dot" data-step="1" data-index="2"></div>
+        <div class="pattern-dot" data-step="1" data-index="3"></div>
+        <div class="pattern-dot" data-step="1" data-index="4"></div>
+        <div class="pattern-dot" data-step="1" data-index="5"></div>
+        <div class="pattern-dot" data-step="1" data-index="6"></div>
+        <div class="pattern-dot" data-step="1" data-index="7"></div>
+        <div class="pattern-dot" data-step="1" data-index="8"></div>
+        <div class="pattern-dot" data-step="1" data-index="9"></div>
+      </div>
+
+      <div class="pattern-actions">
+        <button class="pattern-btn pattern-btn-primary" onclick="verifyOldPattern()" id="verifyOldBtn" disabled>Continue</button>
+        <button class="pattern-btn pattern-btn-secondary" onclick="closeChangePassword()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Enter New Pattern -->
+    <div class="password-step" id="passwordStep2">
+      <div class="step-instruction">Draw your <strong>new</strong> pattern</div>
+      <div class="step-status" id="step2Status"></div>
+
+      <div class="modal-pattern-grid" id="modalGrid2">
+        <svg class="modal-pattern-canvas" id="modalCanvas2">
+          <line class="modal-pattern-line" id="m2line1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line2" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line3" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line4" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line5" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line6" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line7" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m2line8" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="pattern-dot" data-step="2" data-index="1"></div>
+        <div class="pattern-dot" data-step="2" data-index="2"></div>
+        <div class="pattern-dot" data-step="2" data-index="3"></div>
+        <div class="pattern-dot" data-step="2" data-index="4"></div>
+        <div class="pattern-dot" data-step="2" data-index="5"></div>
+        <div class="pattern-dot" data-step="2" data-index="6"></div>
+        <div class="pattern-dot" data-step="2" data-index="7"></div>
+        <div class="pattern-dot" data-step="2" data-index="8"></div>
+        <div class="pattern-dot" data-step="2" data-index="9"></div>
+      </div>
+
+      <div class="pattern-actions">
+        <button class="pattern-btn pattern-btn-primary" onclick="saveNewPatternStep()" id="saveNewBtn" disabled>Continue</button>
+        <button class="pattern-btn pattern-btn-secondary" onclick="backToStep1()">Back</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirm New Pattern -->
+    <div class="password-step" id="passwordStep3">
+      <div class="step-instruction">Draw your <strong>new</strong> pattern again to confirm</div>
+      <div class="step-status" id="step3Status"></div>
+
+      <div class="modal-pattern-grid" id="modalGrid3">
+        <svg class="modal-pattern-canvas" id="modalCanvas3">
+          <line class="modal-pattern-line" id="m3line1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line2" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line3" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line4" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line5" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line6" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line7" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="modal-pattern-line" id="m3line8" x1="0" y1="0" x2="0" y2="0"/>
+        </svg>
+        <div class="pattern-dot" data-step="3" data-index="1"></div>
+        <div class="pattern-dot" data-step="3" data-index="2"></div>
+        <div class="pattern-dot" data-step="3" data-index="3"></div>
+        <div class="pattern-dot" data-step="3" data-index="4"></div>
+        <div class="pattern-dot" data-step="3" data-index="5"></div>
+        <div class="pattern-dot" data-step="3" data-index="6"></div>
+        <div class="pattern-dot" data-step="3" data-index="7"></div>
+        <div class="pattern-dot" data-step="3" data-index="8"></div>
+        <div class="pattern-dot" data-step="3" data-index="9"></div>
+      </div>
+
+      <div class="pattern-actions">
+        <button class="pattern-btn pattern-btn-primary" onclick="confirmNewPattern()" id="confirmNewBtn" disabled>Save Pattern</button>
+        <button class="pattern-btn pattern-btn-secondary" onclick="backToStep2()">Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header class="navbar">
+  <div class="logo">worldclassshipping Admin</div>
+  <nav>
+    <a href="admin.html" class="active">Shipments</a>
+    <a href="chat.html">Support Chat</a>
+  </nav>
+</header>
+
+<section class="admin-section" id="adminSection">
+
+  <div id="errorBox"></div>
+  <div id="statusBox"></div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>📦</span>
+      <span>Create / Edit Shipment</span>
+    </div>
+
+    <div class="tracking-display">
+      <div class="tracking-label">Tracking Number</div>
+      <div class="tracking-number" id="trackingDisplay">Generating...</div>
+    </div>
+
+    <input type="hidden" id="tracking">
+
+    <div class="media-section">
+      <div class="media-title">
+        <span>📎</span>
+        <span>Shipment Media <small style="font-weight:400;color:#888;">(Optional)</small></span>
+      </div>
+
+      <div class="media-type-selector">
+        <button type="button" class="media-type-btn" id="btnNone" onclick="setMediaType('none')">
+          <span>❌</span> None
+        </button>
+        <button type="button" class="media-type-btn" id="btnPhoto" onclick="setMediaType('photo')">
+          <span>📷</span> Photo
+        </button>
+        <button type="button" class="media-type-btn" id="btnVideo" onclick="setMediaType('video')">
+          <span>🎬</span> Video
+        </button>
+      </div>
+
+      <input type="hidden" id="mediaType" value="none">
+      <input type="hidden" id="mediaUrl">
+
+      <div class="media-preview-wrap" id="mediaPreviewWrap">
+        <div class="media-placeholder" id="mediaPlaceholder">
+          <div class="media-placeholder-icon">📎</div>
+          <p>No media selected</p>
+          <p style="font-size: 12px; margin-top: 5px;">Choose a media type above</p>
+        </div>
+        <div class="media-preview" id="mediaPreview"></div>
+      </div>
+
+      <input type="file" id="mediaInput" style="display: none;">
+
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="file-name" id="mediaFileName"></div>
+
+      <div class="media-controls" id="mediaControls">
+        <button class="upload-btn" id="selectMediaBtn" onclick="document.getElementById('mediaInput').click()">
+          <span>📁</span> Select File
+        </button>
+        <button class="upload-btn secondary" id="uploadMediaBtn" onclick="uploadMedia()" disabled>
+          <span>☁️</span> Upload to Cloud
+        </button>
+        <button class="upload-btn" id="clearMediaBtn" onclick="clearMedia()" style="background: #e74c3c; display: none;">
+          <span>🗑️</span> Remove
+        </button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Sender Name</label>
+        <input id="sender" placeholder="Enter sender name">
+      </div>
+
+      <div class="form-group">
+        <label>Receiver Name</label>
+        <input id="recipient" placeholder="Enter receiver name">
+      </div>
+
+      <div class="form-group">
+        <label>Origin Location</label>
+        <input id="origin" placeholder="City, Country">
+      </div>
+
+      <div class="form-group">
+        <label>Destination</label>
+        <input id="destination" placeholder="City, Country">
+      </div>
+
+      <div class="form-group">
+        <label>Weight (kg)</label>
+        <input id="weight" placeholder="e.g., 2.5" type="number" step="0.1">
+      </div>
+
+      <div class="form-group">
+        <label>Current Status</label>
+        <select id="status">
+          <option value="">Select Status</option>
+          <option value="Package Received">Package Received</option>
+          <option value="Package Picked Up">Package Picked Up</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Out for Delivery">Out for Delivery</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Last Update</label>
+        <input id="lastUpdate" placeholder="Auto-generated if empty">
+      </div>
+
+      <div class="form-group">
+        <label>Estimated Delivery</label>
+        <input id="estDelivery" placeholder="e.g., Tuesday, April 7, 2026">
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-primary" onclick="saveShipment()">
+        💾 Save Shipment
+      </button>
+      <button class="btn-secondary" onclick="resetForm()">
+        🔄 Reset Form
+      </button>
+    </div>
   </div>
 
-  <script>
-    /* ===== DEBUG PANEL ===== */
+  <div class="card table-card">
+    <div class="card-title">
+      <span>📋</span>
+      <span>All Shipments</span>
+    </div>
 
-    window.toggleDebug = function() {
+    <table>
+      <thead>
+        <tr>
+          <th>Tracking #</th>
+          <th>Receiver</th>
+          <th>Status</th>
+          <th>Last Update</th>
+          <th>Media</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="shipmentTable">
+        <tr>
+          <td colspan="6" class="loading-row">
+            <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #0a2a66; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle;"></div>
+            Loading shipments...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-      const panel = document.getElementById('debugPanel');
-      const btn = document.getElementById('debugToggle');
+<script type="module" src="firebase.js"></script>
+<script type="module" src="adminscript.js"></script>
 
-      if (panel.classList.contains('hidden')) {
+<!-- Pattern Lock JavaScript -->
+<script type="module">
+  import { db } from './firebase.js';
+  import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
-        panel.classList.remove('hidden');
-        btn.style.display = 'none';
+  // ===== CONFIGURATION =====
+  const DEFAULT_PATTERN = [2, 4, 1];
+  let savedPattern = null;
 
+  // Main lock state
+  let mainPattern = [];
+  let mainIsDrawing = false;
+
+  // Modal state
+  let modalPattern = [];
+  let modalIsDrawing = false;
+  let currentStep = 1;
+  let tempNewPattern = null;
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', async () => {
+    await initPatternLock();
+  });
+
+  async function initPatternLock() {
+    try {
+      const patternDoc = await getDoc(doc(db, 'admin', 'patternLock'));
+
+      if (!patternDoc.exists()) {
+        savedPattern = DEFAULT_PATTERN;
+        await setDoc(doc(db, 'admin', 'patternLock'), {
+          pattern: DEFAULT_PATTERN,
+          createdAt: new Date().toISOString()
+        });
       } else {
-
-        panel.classList.add('hidden');
-        btn.style.display = 'block';
-
+        savedPattern = patternDoc.data().pattern;
       }
 
-    };
-
-    console.log('[DEBUG] HTML parsed, admin page loading');
-
-    const debugContent = document.getElementById('debugContent');
-
-    if (debugContent) {
-
-      const div = document.createElement('div');
-
-      div.className = 'debug-log debug-info';
-
-      div.textContent = '[HTML] Admin page loaded successfully';
-
-      debugContent.appendChild(div);
-
+      setupMainPatternEvents();
+    } catch (err) {
+      console.error('Pattern init error:', err);
+      showMainStatus('Error loading pattern', 'error');
     }
-  </script>
-
-
-  <!-- ===== NAVBAR ===== -->
-
-  <header class="navbar">
-
-    <div class="logo">
-      worldclassshipping Admin
-    </div>
-
-    <nav>
-
-      <a href="admin.html" class="active">
-        Shipments
-      </a>
-
-      <a href="chat.html">
-        Support Chat
-      </a>
-
-    </nav>
-
-  </header>
-
-
-  <!-- ===== ADMIN CONTENT ===== -->
-
-  <section class="admin-section" id="adminSection">
-
-    <!-- Error -->
-    <div id="errorBox"></div>
-
-    <!-- Success -->
-    <div id="statusBox"></div>
-
-
-    <!-- ===== CREATE / EDIT SHIPMENT ===== -->
-
-    <div class="card">
-
-      <div class="card-title">
-
-        <span>📦</span>
-
-        <span>
-          Create / Edit Shipment
-        </span>
-
-      </div>
-
-
-      <!-- Tracking Number -->
-
-      <div class="tracking-display">
-
-        <div class="tracking-label">
-          Tracking Number
-        </div>
-
-        <div
-          class="tracking-number"
-          id="trackingDisplay"
-        >
-          Generating...
-        </div>
-
-      </div>
-
-
-      <input
-        type="hidden"
-        id="tracking"
-      >
-
-
-      <!-- ===== MEDIA SECTION ===== -->
-
-      <div class="media-section">
-
-        <div class="media-title">
-
-          <span>📎</span>
-
-          <span>
-            Shipment Media
-            <small style="font-weight:400;color:#888;">
-              (Optional)
-            </small>
-          </span>
-
-        </div>
-
-
-        <!-- Media Type -->
-
-        <div class="media-type-selector">
-
-          <button
-            type="button"
-            class="media-type-btn"
-            id="btnNone"
-            onclick="setMediaType('none')"
-          >
-            <span>❌</span>
-            None
-          </button>
-
-
-          <button
-            type="button"
-            class="media-type-btn"
-            id="btnPhoto"
-            onclick="setMediaType('photo')"
-          >
-            <span>📷</span>
-            Photo
-          </button>
-
-
-          <button
-            type="button"
-            class="media-type-btn"
-            id="btnVideo"
-            onclick="setMediaType('video')"
-          >
-            <span>🎬</span>
-            Video
-          </button>
-
-        </div>
-
-
-        <input
-          type="hidden"
-          id="mediaType"
-          value="none"
-        >
-
-        <input
-          type="hidden"
-          id="mediaUrl"
-        >
-
-
-        <!-- Media Preview -->
-
-        <div
-          class="media-preview-wrap"
-          id="mediaPreviewWrap"
-        >
-
-          <div
-            class="media-placeholder"
-            id="mediaPlaceholder"
-          >
-
-            <div class="media-placeholder-icon">
-              📎
-            </div>
-
-            <p>
-              No media selected
-            </p>
-
-            <p
-              style="font-size: 12px; margin-top: 5px;"
-            >
-              Choose a media type above
-            </p>
-
-          </div>
-
-
-          <div
-            class="media-preview"
-            id="mediaPreview"
-          ></div>
-
-        </div>
-
-
-        <!-- File Input -->
-
-        <input
-          type="file"
-          id="mediaInput"
-          style="display: none;"
-        >
-
-
-        <!-- Upload Progress -->
-
-        <div
-          class="progress-bar"
-          id="progressBar"
-        >
-
-          <div
-            class="progress-fill"
-            id="progressFill"
-          ></div>
-
-        </div>
-
-
-        <div
-          class="file-name"
-          id="mediaFileName"
-        ></div>
-
-
-        <!-- Media Controls -->
-
-        <div
-          class="media-controls"
-          id="mediaControls"
-        >
-
-          <button
-            class="upload-btn"
-            id="selectMediaBtn"
-            onclick="document.getElementById('mediaInput').click()"
-          >
-
-            <span>📁</span>
-
-            Select File
-
-          </button>
-
-
-          <button
-            class="upload-btn secondary"
-            id="uploadMediaBtn"
-            onclick="uploadMedia()"
-            disabled
-          >
-
-            <span>☁️</span>
-
-            Upload to Cloud
-
-          </button>
-
-
-          <button
-            class="upload-btn"
-            id="clearMediaBtn"
-            onclick="clearMedia()"
-            style="background:#e74c3c;display:none;"
-          >
-
-            <span>🗑️</span>
-
-            Remove
-
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- ===== SHIPMENT FORM ===== -->
-
-      <div class="form-grid">
-
-
-        <!-- Sender -->
-
-        <div class="form-group">
-
-          <label>
-            Sender Name
-          </label>
-
-          <input
-            id="sender"
-            placeholder="Enter sender name"
-          >
-
-        </div>
-
-
-        <!-- Receiver -->
-
-        <div class="form-group">
-
-          <label>
-            Receiver Name
-          </label>
-
-          <input
-            id="recipient"
-            placeholder="Enter receiver name"
-          >
-
-        </div>
-
-
-        <!-- Origin -->
-
-        <div class="form-group">
-
-          <label>
-            Origin Location
-          </label>
-
-          <input
-            id="origin"
-            placeholder="City, Country"
-          >
-
-        </div>
-
-
-        <!-- Destination -->
-
-        <div class="form-group">
-
-          <label>
-            Destination
-          </label>
-
-          <input
-            id="destination"
-            placeholder="City, Country"
-          >
-
-        </div>
-
-
-        <!-- Weight -->
-
-        <div class="form-group">
-
-          <label>
-            Weight (kg)
-          </label>
-
-          <input
-            id="weight"
-            placeholder="e.g., 2.5"
-            type="number"
-            step="0.1"
-          >
-
-        </div>
-
-
-        <!-- Status -->
-
-        <div class="form-group">
-
-          <label>
-            Current Status
-          </label>
-
-          <select id="status">
-
-            <option value="">
-              Select Status
-            </option>
-
-            <option value="Package Received">
-              Package Received
-            </option>
-
-            <option value="Package Picked Up">
-              Package Picked Up
-            </option>
-
-            <option value="In Transit">
-              In Transit
-            </option>
-
-            <option value="Out for Delivery">
-              Out for Delivery
-            </option>
-
-            <option value="Delivered">
-              Delivered
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <!-- Last Update -->
-
-        <div class="form-group">
-
-          <label>
-            Last Update
-          </label>
-
-          <input
-            id="lastUpdate"
-            placeholder="Auto-generated if empty"
-          >
-
-        </div>
-
-
-        <!-- Estimated Delivery -->
-
-        <div class="form-group">
-
-          <label>
-            Estimated Delivery
-          </label>
-
-          <input
-            id="estDelivery"
-            placeholder="e.g., Tuesday, April 7, 2026"
-          >
-
-        </div>
-
-      </div>
-
-
-      <!-- ===== ACTION BUTTONS ===== -->
-
-      <div class="action-bar">
-
-        <button
-          class="btn-primary"
-          onclick="saveShipment()"
-        >
-          💾 Save Shipment
-        </button>
-
-
-        <button
-          class="btn-secondary"
-          onclick="resetForm()"
-        >
-          🔄 Reset Form
-        </button>
-
-      </div>
-
-    </div>
-
-
-    <!-- ===== ALL SHIPMENTS ===== -->
-
-    <div class="card table-card">
-
-      <div class="card-title">
-
-        <span>📋</span>
-
-        <span>
-          All Shipments
-        </span>
-
-      </div>
-
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>
-              Tracking #
-            </th>
-
-            <th>
-              Receiver
-            </th>
-
-            <th>
-              Status
-            </th>
-
-            <th>
-              Last Update
-            </th>
-
-            <th>
-              Media
-            </th>
-
-            <th>
-              Actions
-            </th>
-
-          </tr>
-
-        </thead>
-
-
-        <tbody id="shipmentTable">
-
-          <tr>
-
-            <td
-              colspan="6"
-              class="loading-row"
-            >
-
-              <div
-                style="
-                  display:inline-block;
-                  width:20px;
-                  height:20px;
-                  border:3px solid #f3f3f3;
-                  border-top:3px solid #0a2a66;
-                  border-radius:50%;
-                  animation:spin 1s linear infinite;
-                  margin-right:10px;
-                  vertical-align:middle;
-                "
-              ></div>
-
-              Loading shipments...
-
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </section>
-
-
-  <!-- ===== FIREBASE ===== -->
-
-  <script
-    type="module"
-    src="firebase.js"
-  ></script>
-
-
-  <!-- ===== ADMIN SCRIPT ===== -->
-
-  <script
-    type="module"
-    src="adminscript.js"
-  ></script>
-
+  }
+
+  // ===== MAIN PATTERN LOCK =====
+  function setupMainPatternEvents() {
+    const dots = document.querySelectorAll('#patternGrid .pattern-dot');
+
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+
+      dot.addEventListener('mousedown', (e) => startMainDraw(e, index));
+      dot.addEventListener('touchstart', (e) => startMainDraw(e, index), {passive: false});
+      dot.addEventListener('mouseenter', () => enterMainDot(index));
+      dot.addEventListener('touchmove', handleMainTouchMove, {passive: false});
+    });
+
+    document.addEventListener('mouseup', endMainDraw);
+    document.addEventListener('touchend', endMainDraw);
+  }
+
+  function startMainDraw(e, dotIndex) {
+    e.preventDefault();
+    mainIsDrawing = true;
+    mainPattern = [dotIndex];
+    updateMainDots();
+    drawMainLines();
+    showMainStatus('', 'normal');
+  }
+
+  function enterMainDot(dotIndex) {
+    if (!mainIsDrawing) return;
+    if (!mainPattern.includes(dotIndex)) {
+      mainPattern.push(dotIndex);
+      updateMainDots();
+      drawMainLines();
+    }
+  }
+
+  function handleMainTouchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.classList.contains('pattern-dot') && !element.dataset.step) {
+      const idx = parseInt(element.dataset.index);
+      enterMainDot(idx);
+    }
+  }
+
+  function endMainDraw() {
+    if (!mainIsDrawing) return;
+    mainIsDrawing = false;
+
+    if (mainPattern.length >= 3) {
+      document.getElementById('confirmBtn').disabled = false;
+      verifyAndUnlock();
+    } else {
+      document.getElementById('confirmBtn').disabled = true;
+      showMainStatus('FAILED', 'failed');
+      setTimeout(clearMainPattern, 1000);
+    }
+  }
+
+  function updateMainDots() {
+    const dots = document.querySelectorAll('#patternGrid .pattern-dot');
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+      dot.classList.remove('active', 'correct', 'wrong');
+      if (mainPattern.includes(index)) {
+        dot.classList.add('active');
+      }
+    });
+  }
+
+  function drawMainLines() {
+    const lines = document.querySelectorAll('#patternCanvas .pattern-line');
+    const grid = document.getElementById('patternGrid');
+    const gridRect = grid.getBoundingClientRect();
+
+    for (let i = 0; i < mainPattern.length - 1; i++) {
+      const fromDot = document.querySelector(`#patternGrid [data-index="${mainPattern[i]}"]`);
+      const toDot = document.querySelector(`#patternGrid [data-index="${mainPattern[i + 1]}"]`);
+      const line = lines[i];
+
+      if (fromDot && toDot && line) {
+        const fromRect = fromDot.getBoundingClientRect();
+        const toRect = toDot.getBoundingClientRect();
+
+        line.setAttribute('x1', fromRect.left - gridRect.left + fromRect.width / 2);
+        line.setAttribute('y1', fromRect.top - gridRect.top + fromRect.height / 2);
+        line.setAttribute('x2', toRect.left - gridRect.left + toRect.width / 2);
+        line.setAttribute('y2', toRect.top - gridRect.top + toRect.height / 2);
+        line.classList.add('show');
+      }
+    }
+
+    for (let i = mainPattern.length - 1; i < 8; i++) {
+      if (lines[i]) lines[i].classList.remove('show');
+    }
+  }
+
+  window.clearPattern = function() {
+    mainPattern = [];
+    mainIsDrawing = false;
+    updateMainDots();
+    document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.remove('show'));
+    document.getElementById('confirmBtn').disabled = true;
+    showMainStatus('', 'normal');
+  };
+
+  function clearMainPattern() {
+    window.clearPattern();
+  }
+
+  async function verifyAndUnlock() {
+    const isMatch = JSON.stringify(mainPattern) === JSON.stringify(savedPattern);
+
+    if (isMatch) {
+      showMainStatus('SUCCESS', 'success');
+      document.querySelectorAll('#patternGrid .pattern-dot').forEach(d => {
+        d.classList.remove('active');
+        d.classList.add('correct');
+      });
+      document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.add('correct'));
+
+      setTimeout(() => {
+        unlockAdmin();
+      }, 800);
+    } else {
+      showMainStatus('FAILED', 'failed');
+      document.querySelectorAll('#patternGrid .pattern-dot').forEach(d => {
+        d.classList.remove('active');
+        d.classList.add('wrong');
+      });
+      document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.add('wrong'));
+
+      setTimeout(() => {
+        clearMainPattern();
+        document.querySelectorAll('#patternGrid .pattern-dot').forEach(d => d.classList.remove('wrong'));
+        document.querySelectorAll('#patternCanvas .pattern-line').forEach(l => l.classList.remove('wrong'));
+      }, 1500);
+    }
+  }
+
+  window.confirmPattern = async function() {
+    await verifyAndUnlock();
+  };
+
+  // CRITICAL FIX: Dispatch event so adminscript knows DOM is visible
+  function unlockAdmin() {
+    document.getElementById('patternOverlay').classList.add('hidden');
+    document.getElementById('adminSection').classList.add('visible');
+    window.dispatchEvent(new CustomEvent('adminUnlocked'));
+  }
+
+  function showMainStatus(msg, type) {
+    const status = document.getElementById('patternStatus');
+    status.textContent = msg;
+    status.className = 'pattern-status ' + type;
+  }
+
+  // ===== MODAL PATTERN LOCK (Change Password) =====
+  window.showChangePassword = function(e) {
+    e.preventDefault();
+    document.getElementById('changePasswordModal').classList.add('show');
+    resetChangePassword();
+  };
+
+  window.closeChangePassword = function() {
+    document.getElementById('changePasswordModal').classList.remove('show');
+  };
+
+  function resetChangePassword() {
+    currentStep = 1;
+    modalPattern = [];
+    modalIsDrawing = false;
+    tempNewPattern = null;
+
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('passwordStep1').classList.add('active');
+
+    document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active', 'completed'));
+    document.getElementById('step1').classList.add('active');
+
+    document.getElementById('step1Status').textContent = '';
+    document.getElementById('step2Status').textContent = '';
+    document.getElementById('step3Status').textContent = '';
+
+    clearModalGrid(1);
+    clearModalGrid(2);
+    clearModalGrid(3);
+
+    setupModalPatternEvents(1);
+    setupModalPatternEvents(2);
+    setupModalPatternEvents(3);
+  }
+
+  function setupModalPatternEvents(step) {
+    const grid = document.getElementById(`modalGrid${step}`);
+    const dots = grid.querySelectorAll('.pattern-dot');
+
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+
+      dot.addEventListener('mousedown', (e) => startModalDraw(e, index, step));
+      dot.addEventListener('touchstart', (e) => startModalDraw(e, index, step), {passive: false});
+      dot.addEventListener('mouseenter', () => enterModalDot(index, step));
+      dot.addEventListener('touchmove', (e) => handleModalTouchMove(e, step), {passive: false});
+    });
+  }
+
+  function startModalDraw(e, dotIndex, step) {
+    if (step !== currentStep) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    modalIsDrawing = true;
+    modalPattern = [dotIndex];
+    updateModalDots(step);
+    drawModalLines(step);
+
+    const statusEl = document.getElementById(`step${step}Status`);
+    if (statusEl) statusEl.textContent = '';
+  }
+
+  function enterModalDot(dotIndex, step) {
+    if (!modalIsDrawing || step !== currentStep) return;
+    if (!modalPattern.includes(dotIndex)) {
+      modalPattern.push(dotIndex);
+      updateModalDots(step);
+      drawModalLines(step);
+    }
+  }
+
+  function handleModalTouchMove(e, step) {
+    if (step !== currentStep) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.classList.contains('pattern-dot') && element.dataset.step == step) {
+      const idx = parseInt(element.dataset.index);
+      enterModalDot(idx, step);
+    }
+  }
+
+  function endModalDraw(step) {
+    if (!modalIsDrawing || step !== currentStep) return;
+    modalIsDrawing = false;
+
+    const btn = document.getElementById(step === 1 ? 'verifyOldBtn' : step === 2 ? 'saveNewBtn' : 'confirmNewBtn');
+
+    if (modalPattern.length >= 3) {
+      if (btn) btn.disabled = false;
+    } else {
+      if (btn) btn.disabled = true;
+      const statusEl = document.getElementById(`step${step}Status`);
+      if (statusEl) {
+        statusEl.textContent = 'FAILED - Need at least 3 dots';
+        statusEl.className = 'step-status error';
+      }
+      setTimeout(() => clearModalGrid(step), 1000);
+    }
+  }
+
+  document.addEventListener('mouseup', (e) => {
+    if (currentStep >= 1 && currentStep <= 3) {
+      endModalDraw(currentStep);
+    }
+  });
+  document.addEventListener('touchend', (e) => {
+    if (currentStep >= 1 && currentStep <= 3) {
+      endModalDraw(currentStep);
+    }
+  });
+
+  function updateModalDots(step) {
+    const grid = document.getElementById(`modalGrid${step}`);
+    const dots = grid.querySelectorAll('.pattern-dot');
+    dots.forEach((dot) => {
+      const index = parseInt(dot.dataset.index);
+      dot.classList.remove('active', 'correct', 'wrong');
+      if (modalPattern.includes(index)) {
+        dot.classList.add('active');
+      }
+    });
+  }
+
+  function drawModalLines(step) {
+    const lines = document.querySelectorAll(`#modalCanvas${step} .modal-pattern-line`);
+    const grid = document.getElementById(`modalGrid${step}`);
+    const gridRect = grid.getBoundingClientRect();
+
+    for (let i = 0; i < modalPattern.length - 1; i++) {
+      const fromDot = grid.querySelector(`[data-index="${modalPattern[i]}"]`);
+      const toDot = grid.querySelector(`[data-index="${modalPattern[i + 1]}"]`);
+      const line = lines[i];
+
+      if (fromDot && toDot && line) {
+        const fromRect = fromDot.getBoundingClientRect();
+        const toRect = toDot.getBoundingClientRect();
+
+        line.setAttribute('x1', fromRect.left - gridRect.left + fromRect.width / 2);
+        line.setAttribute('y1', fromRect.top - gridRect.top + fromRect.height / 2);
+        line.setAttribute('x2', toRect.left - gridRect.left + toRect.width / 2);
+        line.setAttribute('y2', toRect.top - gridRect.top + toRect.height / 2);
+        line.classList.add('show');
+      }
+    }
+
+    for (let i = modalPattern.length - 1; i < 8; i++) {
+      if (lines[i]) lines[i].classList.remove('show');
+    }
+  }
+
+  function clearModalGrid(step) {
+    modalPattern = [];
+    modalIsDrawing = false;
+
+    const grid = document.getElementById(`modalGrid${step}`);
+    const dots = grid.querySelectorAll('.pattern-dot');
+    dots.forEach(d => d.classList.remove('active', 'correct', 'wrong'));
+
+    const lines = document.querySelectorAll(`#modalCanvas${step} .modal-pattern-line`);
+    lines.forEach(l => l.classList.remove('show'));
+
+    const btn = document.getElementById(step === 1 ? 'verifyOldBtn' : step === 2 ? 'saveNewBtn' : 'confirmNewBtn');
+    if (btn) btn.disabled = true;
+  }
+
+  window.verifyOldPattern = async function() {
+    if (modalPattern.length < 3) return;
+
+    const isMatch = JSON.stringify(modalPattern) === JSON.stringify(savedPattern);
+    const statusEl = document.getElementById('step1Status');
+
+    if (isMatch) {
+      statusEl.textContent = 'Correct!';
+      statusEl.className = 'step-status success';
+
+      setTimeout(() => {
+        goToStep(2);
+      }, 500);
+    } else {
+      statusEl.textContent = 'FAILED - Wrong pattern';
+      statusEl.className = 'step-status error';
+      setTimeout(() => clearModalGrid(1), 1500);
+    }
+  };
+
+  window.backToStep1 = function() {
+    goToStep(1);
+    clearModalGrid(1);
+  };
+
+  window.saveNewPatternStep = function() {
+    if (modalPattern.length < 3) return;
+
+    if (JSON.stringify(modalPattern) === JSON.stringify(savedPattern)) {
+      document.getElementById('step2Status').textContent = 'FAILED - Must be different from old';
+      document.getElementById('step2Status').className = 'step-status error';
+      return;
+    }
+
+    tempNewPattern = [...modalPattern];
+    document.getElementById('step2Status').textContent = 'Pattern saved!';
+    document.getElementById('step2Status').className = 'step-status success';
+
+    setTimeout(() => {
+      goToStep(3);
+    }, 500);
+  };
+
+  window.backToStep2 = function() {
+    goToStep(2);
+    tempNewPattern = null;
+    clearModalGrid(2);
+  };
+
+  window.confirmNewPattern = async function() {
+    if (modalPattern.length < 3) return;
+
+    const isMatch = JSON.stringify(modalPattern) === JSON.stringify(tempNewPattern);
+    const statusEl = document.getElementById('step3Status');
+
+    if (isMatch) {
+      try {
+        await setDoc(doc(db, 'admin', 'patternLock'), {
+          pattern: modalPattern,
+          updatedAt: new Date().toISOString()
+        });
+
+        savedPattern = [...modalPattern];
+        statusEl.textContent = 'Pattern changed successfully!';
+        statusEl.className = 'step-status success';
+
+        setTimeout(() => {
+          closeChangePassword();
+          unlockAdmin();
+        }, 1000);
+
+      } catch (err) {
+        statusEl.textContent = 'Error saving: ' + err.message;
+        statusEl.className = 'step-status error';
+      }
+    } else {
+      statusEl.textContent = 'FAILED - Patterns do not match';
+      statusEl.className = 'step-status error';
+      setTimeout(() => clearModalGrid(3), 1500);
+    }
+  };
+
+  function goToStep(step) {
+    currentStep = step;
+
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+      d.classList.remove('active', 'completed');
+      if (i + 1 < step) d.classList.add('completed');
+      if (i + 1 === step) d.classList.add('active');
+    });
+
+    document.querySelectorAll('.password-step').forEach(s => s.classList.remove('active'));
+    document.getElementById(`passwordStep${step}`).classList.add('active');
+
+    modalPattern = [];
+    modalIsDrawing = false;
+  }
+
+  // Expose functions globally
+  window.clearPattern = window.clearPattern;
+  window.confirmPattern = window.confirmPattern;
+  window.showChangePassword = window.showChangePassword;
+  window.closeChangePassword = window.closeChangePassword;
+  window.verifyOldPattern = window.verifyOldPattern;
+  window.backToStep1 = window.backToStep1;
+  window.saveNewPatternStep = window.saveNewPatternStep;
+  window.backToStep2 = window.backToStep2;
+  window.confirmNewPattern = window.confirmNewPattern;
+</script>
 
 </body>
 </html>
